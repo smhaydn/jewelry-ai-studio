@@ -9,8 +9,8 @@ export interface AnalysisResult {
 // 1. AURA DEFINITIONS
 const AURA_STYLES = {
   standard: "PURE COMMERCIAL STUDIO PHOTOGRAPHY. \n    BACKGROUND: Solid Neutral Colors (White, Light Grey, Beige) ONLY. NO PLANTS, NO FURNITURE, NO SCENERY. \n    LIGHTING: Softbox Studio Lighting. Even, shadowless, strictly technical. \n    FOCUS: Macro shot of the product. If it's a ring, show HAND ONLY. If it's a necklace, show NECK ONLY. \n    VIBE: E-Commerce Product Listing. Clean, sterile, professional.",
-  playful: "LIFESTYLE INFLUENCER AESTHETIC (Pinterest/Instagram). Candid, 'caught in the moment' vibe. Golden hour sunlight or cozy cafe lighting. Slightly grainy film look. The model looks relaxed and happy, not posing stiffly. Authentic, relatable luxury.",
-  artistic: "FINE ART BEAUTY EDITORIAL. 'SCULPTURAL & ORGANIC'. \n    STYLING: MINIMALIST. Bare skin (shoulders/neck), soft silk draping, or neutral knit texture. NO BLAZERS. NO STRUCTURED JACKETS. \n    LIGHTING: CHIAROSCURO & RIM LIGHT. Dramatic interplay of light and shadow. The jewelry catches the light. Golden hour glow on DEWY SKIN. \n    COMPOSITION: MACRO BEAUTY SHOT. Focus on the interaction between the jewelry and the skin (hands touching face, earring against neck). \n    MOOD: Intimate, Breathless, Expensive. A moment of silence. Pure Art.",
+  playful: "LIFESTYLE INFLUENCER AESTHETIC. MEDIUM SHOT (Waist up). Candid, authentic. Golden hour sunlight or cozy cafe lighting. Slightly grainy film look. The model looks relaxed and happy. The jewelry is just a detail in her outfit, NOT the main focus.",
+  artistic: "FINE ART BEAUTY EDITORIAL. 'SCULPTURAL & ORGANIC'. \n    STYLING: MINIMALIST. Bare skin (shoulders/neck), soft silk draping. NO BLAZERS. \n    LIGHTING: CHIAROSCURO. Dramatic shadow. \n    COMPOSITION: MEDIUM PORTRAIT (Chest up). Allow breathing room around the model. The jewelry is DELICATE and SMALL in the frame. \n    MOOD: Intimate, Breathless, Expensive.",
 };
 
 export const analyzeJewelry = async (productImagesBase64: string[], category: string): Promise<AnalysisResult> => {
@@ -47,11 +47,11 @@ export const analyzeJewelry = async (productImagesBase64: string[], category: st
   return JSON.parse(response.text) as AnalysisResult;
 };
 
-// 2. DYNAMIC POSING & NEGATIVE CONSTRAINTS (Crucial for preventing Necklace -> Ring hallucinations)
+// 2. DYNAMIC POSING & NEGATIVE CONSTRAINTS
 const getPoseInstruction = (category: string, variationMode: string): string => {
   const cat = category.toLowerCase();
 
-  // NEGATIVE CONSTRAINTS: Tell AI what NOT to do based on category
+  // NEGATIVE CONSTRAINTS
   let negativeConstraints = "";
   if (cat.includes('kolye') || cat.includes('necklace')) {
     negativeConstraints = "NEGATIVE CONSTRAINT: DO NOT GENERATE RINGS ON FINGERS. DO NOT GENERATE BRACELETS. The product is ONLY the necklace on the neck.";
@@ -134,7 +134,7 @@ export const generateLifestyleImage = async (
   variationMode: 'standard' | 'playful' | 'artistic' = 'standard'
 ) => {
   const ai = createAI();
-  const model = 'gemini-3-pro-image-preview';
+  const model = 'gemini-3-pro-image-preview'; // Keeping Preview model for speed/quality balance
 
   const auraPrompt = AURA_STYLES[variationMode];
   const poseInstruction = getPoseInstruction(category, variationMode);
@@ -156,10 +156,25 @@ export const generateLifestyleImage = async (
     `;
   }
 
-  // Explicit Subject Line to reinforce category
+  // Explicit Subject Line
   const subjectLine = `SUBJECT: Professional model wearing a ${category}.`;
 
+  // MODEL INJECTION (MOVED TO TOP PRIORITY)
+  let modelIdentityPrompt = "";
+  if (modelReferenceBase64) {
+    modelIdentityPrompt = `
+    *** CRITICAL: FACE/MODEL IDENTITY ENFORCEMENT ***
+    - The LAST image provided is the REFERENCE MODEL (Target Face).
+    - You MUST perform a "Face Swap" operation effectively.
+    - The generated person MUST look exactly like the reference model identity.
+    - Match: Skin tone, Hair color, Facial structure, Gender, Age.
+    - If the reference is Male, generate a Male. If Female, generate Female.
+    *** END MODEL IDENTITY ***
+    `;
+  }
+
   let fullPrompt = `
+    ${modelIdentityPrompt}
     ${subjectLine}
     
     AESTHETIC & ATMOSPHERE (THE AURA):
@@ -173,10 +188,12 @@ export const generateLifestyleImage = async (
     ${fidelityInstruction}
 
     REALISTIC SIZE & SCALE (MANDATORY):
-    - The jewelry size must be PHYSICALLY ACCURATE relative to the model.
-    - Do NOT enlarge the jewelry for visibility. Keep it delicate and true to scale.
-    - If it's a necklace, it should fit naturally on the neck, not floating or looking giant.
-    - If it's a ring, it should fit the finger realistically.
+    - *** NEGATIVE CONSTRAINT: DO NOT GENERATE GIANT JEWELRY. ***
+    - The jewelry size must be MICROSCOPICALLY ACCURATE to real life.
+    - NECKLACE: Must fit delicately on the neck. It is small. It is NOT a breastplate.
+    - RING: Must be small and fit on a single finger.
+    - EARRING: Must be ear-sized, not shoulder-sized.
+    - Camera must be far enough back to show the jewelry in context (Medium Shot), NOT a Macro Zoom.
 
     REALISM:
     - Skin texture must be 8k resolution, raw photo quality, visible pores, freckles (if applicable), fine hair.
@@ -190,16 +207,8 @@ export const generateLifestyleImage = async (
     parts.push({ inlineData: { mimeType: 'image/jpeg', data: img } });
   });
 
-  // MODEL REFERENCE
+  // MODEL REFERENCE (Still appended as image, but prompt is now top priority)
   if (modelReferenceBase64) {
-    const modelPrompt = `
-    \n
-    *** MODEL IDENTITY ENFORCEMENT ***
-    - You MUST use the face and physical features of the person in the LAST image provided.
-    - This is the specific brand model.
-    - If the pose covers part of the face, the visible parts (eyes, skin tone, hair) MUST match this reference.
-    `;
-    parts[0].text += modelPrompt;
     parts.push({ inlineData: { mimeType: 'image/jpeg', data: modelReferenceBase64 } });
   }
 
