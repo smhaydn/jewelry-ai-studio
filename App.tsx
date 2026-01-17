@@ -371,7 +371,8 @@ export default function App() {
         job.stylePreset,
         { aspectRatio: job.aspectRatio, cameraAngle: job.cameraAngle, shotScale: job.shotScale, lens: job.lens },
         modelRef,
-        'standard'
+        'standard',
+        job.analysis as any
       );
 
       // 2. Create SMART CROP based on Category Focus Point
@@ -392,8 +393,8 @@ export default function App() {
 
       // 3. Generate CREATIVE Variations in Parallel
       const creativePromises = [
-        generateLifestyleImage(job.productImages, job.analysis?.scenePrompt || "", job.category, job.stylePreset, { ...job, aspectRatio: job.aspectRatio } as any, modelRef, 'playful'),
-        generateLifestyleImage(job.productImages, job.analysis?.scenePrompt || "", job.category, job.stylePreset, { ...job, aspectRatio: job.aspectRatio } as any, modelRef, 'artistic')
+        generateLifestyleImage(job.productImages, job.analysis?.scenePrompt || "", job.category, job.stylePreset, { ...job, aspectRatio: job.aspectRatio } as any, modelRef, 'playful', job.analysis as any),
+        generateLifestyleImage(job.productImages, job.analysis?.scenePrompt || "", job.category, job.stylePreset, { ...job, aspectRatio: job.aspectRatio } as any, modelRef, 'artistic', job.analysis as any)
       ];
 
       const [resPinterest1, resPinterest2] = await Promise.all(creativePromises);
@@ -490,7 +491,8 @@ export default function App() {
             lens: job.lens
           },
           modelRef,
-          'standard'
+          'standard',
+          { material: 'Unknown', gemColor: 'Unknown' } // Batch mode simple fallback
         );
 
         setBatchQueue(prev => prev.map(j => j.id === batchJob.id ? { ...j, status: 'completed', resultImage } : j));
@@ -918,9 +920,9 @@ export default function App() {
                       onMouseDown={handleMouseDown}
                       onTouchStart={handleMouseDown}
                     >
-                      <img src={`data:image/png;base64,${activeImage.image}`} className="absolute inset-0 w-full h-full object-cover" alt="After" />
+                      <img src={`data:image/png;base64,${activeImage.image}`} className="absolute inset-0 w-full h-full object-contain bg-slate-900" alt="After" />
                       <div className="absolute inset-0 w-full h-full overflow-hidden border-r-2 border-white" style={{ width: `${sliderPosition}%` }}>
-                        {job.productImages[0] ? <img src={`data:image/jpeg;base64,${job.productImages[0]}`} className="absolute inset-0 w-full h-full object-cover" alt="Before" /> : <div className="bg-slate-200 w-full h-full"></div>}
+                        {job.productImages[0] ? <img src={`data:image/jpeg;base64,${job.productImages[0]}`} className="absolute inset-0 w-full h-full object-contain bg-slate-900/50" alt="Before" /> : <div className="bg-slate-200 w-full h-full"></div>}
                         <div className="absolute top-4 left-4 bg-black/50 text-white text-[10px] font-bold px-2 py-1 rounded backdrop-blur-sm">ORİJİNAL</div>
                       </div>
 
@@ -949,7 +951,7 @@ export default function App() {
                       onClick={() => setJob(p => ({ ...p, selectedImageId: item.id }))}
                       className={`relative flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all ${job.selectedImageId === item.id ? 'border-indigo-600 ring-2 ring-indigo-200' : 'border-slate-200 opacity-70 hover:opacity-100'}`}
                     >
-                      <img src={`data:image/png;base64,${item.image}`} className="w-full h-full object-cover" />
+                      <img src={`data:image/png;base64,${item.image}`} className="w-full h-full object-cover object-top" />
                       <div className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[9px] font-bold p-1 text-center truncate">
                         {item.label}
                       </div>
