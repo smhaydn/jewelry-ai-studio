@@ -1009,7 +1009,7 @@ export default function App() {
                         onClick={() => loadFromArchive(item)}
                         className="w-full flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors group text-left"
                       >
-                        <img src={`data:image/png;base64,${item.image}`} className="w-12 h-12 rounded-md object-cover bg-slate-100" />
+                        <img src={item.image.startsWith('http') ? item.image : `data:image/png;base64,${item.image}`} className="w-12 h-12 rounded-md object-cover bg-slate-100" />
                         <div className="text-left flex-1 min-w-0">
                           <p className="font-bold text-xs text-slate-800 truncate group-hover:text-indigo-600 transition-colors">{item.label}</p>
                           <div className="text-[10px] text-slate-400 flex items-center gap-2">
