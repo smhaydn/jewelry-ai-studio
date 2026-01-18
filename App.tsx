@@ -823,7 +823,10 @@ export default function App() {
                         {/* Original Image (Fully Visible) */}
                         <img
                           ref={cropImageRef}
-                          src={`data:image/png;base64,${job.gallery.find(g => g.type === 'standard')?.image}`}
+                          src={job.gallery.find(g => g.type === 'standard')?.image.startsWith('http') 
+                            ? job.gallery.find(g => g.type === 'standard')?.image 
+                            : `data:image/png;base64,${job.gallery.find(g => g.type === 'standard')?.image}`
+                          }
                           className="max-h-[600px] max-w-full object-contain"
                           onMouseDown={(e: any) => { e.target.parentElement.dispatchEvent(new MouseEvent('mousedown', e)); }}
                         />
@@ -863,19 +866,15 @@ export default function App() {
                   </div>
                 ) : activeImage ? (
                   // --- STANDARD VIEW (Zoom Enabled) ---
-                  <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
-                    <div
-                      className="relative w-full h-full flex items-center justify-center cursor-zoom-in group"
-                      onMouseEnter={() => setIsZooming(true)}
-                      onMouseLeave={() => setIsZooming(false)}
-                      onMouseMove={handleZoomMove}
-                    >
-                      <img
-                        src={`data:image/png;base64,${activeImage.image}`}
-                        className={`max-h-full max-w-full object-contain transition-transform duration-200 ease-out ${isZooming ? 'scale-[2.5]' : 'scale-100'}`}
-                        style={isZooming ? zoomStyle : {}}
-                        alt="Hero Result"
-                      />
+                  <div className="relative group cursor-zoom-in" onMouseMove={handleZoomMove} style={isZooming ? { overflow: 'hidden' } : {}}>
+                     <img
+                       src={activeImage.image.startsWith('http') ? activeImage.image : `data:image/png;base64,${activeImage.image}`}
+                       className={`max-h-full max-w-full object-contain shadow-2xl rounded-lg transition-transform duration-200 ${isZooming ? 'scale-[2]' : 'scale-100'}`}
+                       style={isZooming ? zoomStyle : {}}
+                       onMouseEnter={() => setIsZooming(true)}
+                       onMouseLeave={() => setIsZooming(false)}
+                       alt="Hero Result"
+                     />
                       {!isZooming && (
                         <div className="absolute top-4 right-4 bg-indigo-600/90 text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg backdrop-blur-sm border border-indigo-400/30">
                           AI ({activeImage.label})
@@ -1002,8 +1001,9 @@ export default function App() {
               </div>
             </div>
           </div>
-        )}
-      </main>
-    </div>
+  )
+}
+      </main >
+    </div >
   );
 }
