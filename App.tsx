@@ -162,8 +162,8 @@ const fileToBase64 = (file: File): Promise<string> => {
 
 // --- INITIAL DATA ---
 const INITIAL_MODELS: ModelPersona[] = [
-  { id: 'm1', name: 'Elif', image: '/models/elif.jpg', category: 'Female', description: 'Sophisticated, 25-30 years old, intense gaze' },
-  { id: 'm2', name: 'Can', image: '/models/can.jpg', category: 'Male', description: 'Charismatic, 28-35 years old, strong jawline' },
+  { id: 'm1', name: 'Elif', image: '/models/elif.jpg', category: 'Female', description: 'Sophisticated, 25-30 years old, intense gaze', physicalDescription: 'Female, 28 years old, oval face, high cheekbones, dark brown hair usually tied back, soft natural eyebrows, fair skin with slight natural texture. Elegant and sophisticated look.' },
+  { id: 'm2', name: 'Can', image: '/models/can.jpg', category: 'Male', description: 'Charismatic, 28-35 years old, strong jawline', physicalDescription: 'Male, 30 years old, square jawline, short dark hair, stubble beard, athletic build, intense gaze. Sharp and masculine features.' },
 ];
 
 export default function App() {
@@ -271,7 +271,8 @@ export default function App() {
         name: file.name.split('.')[0],
         image: base64,
         category: modelTab,
-        description: 'User uploaded model'
+        description: 'User uploaded model',
+        physicalDescription: 'User uploaded model'
       };
 
       const updatedModels = [...models, newModel];
@@ -316,17 +317,22 @@ export default function App() {
       // Assuming generateLifestyleImage handles analysis internally or we skip it for now.
 
       setJob(p => ({ ...p, status: 'generating' }));
+
+      const selectedScene = STYLE_PRESETS.find(s => s.prompt === job.stylePreset) || STYLE_PRESETS[0];
+
       const result = await generateLifestyleImage(
         job.productImages,
-        selectedModel.image, // Fix: Pass string image, not object
+        selectedScene.prompt,
         job.category,
-        job.stylePreset,
+        selectedScene.label,
         {
           aspectRatio: job.aspectRatio,
           cameraAngle: 'Eye Level',
           shotScale: 'Medium Shot',
           lens: '50mm',
-        }
+        },
+        selectedModel.image,
+        selectedModel.physicalDescription // New argument
       );
 
       if (result.error) throw new Error(result.error);

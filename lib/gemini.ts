@@ -16,6 +16,7 @@ export interface ModelPersona {
   image: string;
   category: string;
   description: string;
+  physicalDescription?: string; // New field for forensic identity
 }
 
 export interface JewelryProduct {
@@ -67,16 +68,16 @@ export const analyzeJewelry = async (productImagesBase64: string[], category: st
   });
 
   try {
-    const result = await ai.models.generateContent({
+    const config: any = {
       model,
       contents: [{ role: 'user', parts }],
       generationConfig: {
-        // @ts-ignore
         responseMimeType: 'application/json',
       }
-    });
+    };
+    const result = await ai.models.generateContent(config);
 
-    const text = result.response.text();
+    const text = (result as any).text ? (result as any).text() : (result as any).response?.text();
     if (!text) throw new Error("No analysis generated");
     return JSON.parse(text) as AnalysisResult;
 
@@ -332,6 +333,7 @@ export const generateLifestyleImage = async (
     lens: string;
   },
   modelReferenceBase64?: string | null,
+  modelPhysicalDescription?: string, // New argument
   variationMode: 'standard' | 'playful' | 'artistic' = 'artistic',
   detectedMaterial?: { material: string, gemColor: string }
 ): Promise<{ image: string | null; error: string | null }> => {
@@ -403,8 +405,17 @@ export const generateLifestyleImage = async (
       - Even if the scene is "Dim/Dark", the FACE MUST BE LIT ENOUGH TO SHOW IDENTITY.
       - PRIORITY: IDENTITY > AESTHETICS.
     *** END FORENSIC LOCK ***
-    
-    
+    `;
+  }
+
+  // PHYSICAL DESCRIPTION INJECTION
+  if (modelPhysicalDescription) {
+    modelIdentityPrompt += `
+    *** MANDATORY PHYSICAL TRAITS (TEXTUAL ANCHOR) ***
+    - The target person has the following undeniable traits. YOU MUST ADHERE TO THEM:
+    - "${modelPhysicalDescription}"
+    - If the image differs from this text, PRIORITIZE THIS TEXT for hair color/style and eye color.
+    *** END TEXT ANCHOR ***
     `;
   }
 
@@ -450,7 +461,8 @@ export const generateLifestyleImage = async (
     - Visible pores ? YES.
     - Real skin texture ? YES.
     - Plastic smoothness ? NO.
-    - ** REFERENCE FIDELITY: The reference model is already perfect.DO NOT "FIX" HER.Just copy her exact skin reality. **
+    - ** REFERENCE FIDELITY: The reference model is already perfect. DO NOT "FIX" HER. Just copy her exact skin reality. **
+    - ** IDENTITY-SAFE ANATOMY: Improve skin quality BUT DO NOT ALTER BONE STRUCTURE or FACIAL FEATURES. **
 
     *** SENSITIVE IDENTITY CHECK(SANDWICH LOCK) ***
     - FINAL VERIFICATION: DOES THE FACE LOOK LIKE THE SISTER OF THE REFERENCE ?
@@ -474,17 +486,18 @@ export const generateLifestyleImage = async (
     parts.push({ inlineData: { mimeType: 'image/jpeg', data: modelReferenceBase64 } });
   }
 
-  const response = await ai.models.generateContent({
+  const request: any = {
     model,
     contents: [{ role: 'user', parts }],
     generationConfig: {
-      // @ts-ignore
       imageConfig: {
         aspectRatio: technicalSettings.aspectRatio,
         imageSize: '2K'
       }
     }
-  });
+  };
+
+  const response = await ai.models.generateContent(request);
 
   const responseParts = response.candidates?.[0]?.content?.parts;
   if (!responseParts) return { image: null, error: "Görsel oluşturulamadı (API Yanıtı Boş)" };
