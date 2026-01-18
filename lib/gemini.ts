@@ -386,13 +386,19 @@ export const generateLifestyleImage = async (
   let modelIdentityPrompt = "";
   if (modelReferenceBase64) {
     modelIdentityPrompt = `
-    *** CRITICAL: FACE/MODEL IDENTITY ENFORCEMENT ***
-    - The LAST image provided is the REFERENCE MODEL (Target Face).
-    - You MUST perform a "Face Swap" operation effectively.
-    - The generated person MUST look exactly like the reference model identity.
-    - Match: Skin tone, Hair color, Facial structure, Gender, Age.
-    - If the reference is Male, generate a Male. If Female, generate Female.
-    *** END MODEL IDENTITY ***
+    *** CRITICAL: DEEPFAKE-LEVEL FACE IDENTITY LOCK ***
+    - The LAST image provided is the REFERENCE MODEL (Target Person).
+    - PRIORITY #1: YOU MUST CLONE THIS PERSON'S FACE EXACTLY.
+    - PRESERVE: 
+      1. EYE SHAPE & COLOR
+      2. NOSE SHAPE
+      3. LIP SHAPE & VOLUME
+      4. SKIN TEXTURE (Freckles, moles, scars MUST be visible)
+      5. HAIR COLOR & STYLE (Do not change dark hair to blonde)
+    - FAILURE CONDITION: If the face looks like a generic AI model, you fail.
+    - ATTENTION: If the style preset suggests lighting that would wash out features, IGNORE THE LIGHTING. The face must remain recognizable.
+    *** END IDENTITY LOCK ***
+    
     `;
   }
 
