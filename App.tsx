@@ -557,7 +557,8 @@ export default function App() {
       document.body.removeChild(link);
 
       if (imageUrl.startsWith('http')) {
-        URL.revokeObjectURL(href);
+        // Small delay to ensure browser captures the blob
+        setTimeout(() => URL.revokeObjectURL(href), 1000);
       }
     } catch (e) {
       console.error("Download failed:", e);
