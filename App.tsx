@@ -296,6 +296,24 @@ export default function App() {
     }
   };
 
+  const updateModelDescription = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const model = models.find(m => m.id === id);
+    if (!model) return;
+
+    const newDesc = prompt("Fiziksel Özellikler (Yaş, Vücut Tipi, Saç Rengi vs):", model.physicalDescription || "");
+    if (newDesc !== null) {
+      const updatedModels = models.map(m => m.id === id ? { ...m, physicalDescription: newDesc } : m);
+      setModels(updatedModels);
+
+      if (supabase) {
+        await supabase.from('models').update({ physicalDescription: newDesc }).match({ id });
+      } else {
+        localStorage.setItem('local_models', JSON.stringify(updatedModels));
+      }
+    }
+  };
+
   const handleGenerate = async () => {
     if (job.productImages.length === 0) {
       setJob(p => ({ ...p, error: "Lütfen en az bir ürün görseli yükleyin." }));
@@ -674,8 +692,15 @@ export default function App() {
                     <span className="text-white font-bold text-sm">{model.name}</span>
                     <span className="text-white/80 text-xs">{model.category === 'Male' ? 'Erkek' : 'Kadın'}</span>
                     <button
+                      onClick={(e) => updateModelDescription(model.id, e)}
+                      className="absolute top-2 left-2 bg-indigo-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-indigo-700 transition-all shadow-sm"
+                      title="Fiziksel Özellikleri Düzenle"
+                    >
+                      <PaintBrushIcon className="h-3 w-3" />
+                    </button>
+                    <button
                       onClick={(e) => deleteModel(model.id, e)}
-                      className="absolute top-2 right-2 bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-700 transition-all shado-sm"
+                      className="absolute top-2 right-2 bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-700 transition-all shadow-sm"
                       title="Mankeni Sil"
                     >
                       <TrashIcon className="h-3 w-3" />
