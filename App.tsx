@@ -535,6 +535,36 @@ export default function App() {
     }, 2000);
   };
 
+  // --- DOWNLOAD HELPER ---
+  const downloadImage = async (imageUrl: string, filename: string) => {
+    try {
+      let href = imageUrl;
+      if (imageUrl.startsWith('http')) {
+        // If external URL (Supabase), fetch as blob to avoid CORS/Browser open-in-tab issues
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        href = URL.createObjectURL(blob);
+      } else if (!imageUrl.startsWith('data:')) {
+        // If raw base64 without prefix
+        href = `data:image/png;base64,${imageUrl}`;
+      }
+
+      const link = document.createElement('a');
+      link.href = href;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      if (imageUrl.startsWith('http')) {
+        URL.revokeObjectURL(href);
+      }
+    } catch (e) {
+      console.error("Download failed:", e);
+      alert("İndirme başlatılamadı. Görsele sağ tıklayıp 'Farklı Kaydet' diyebilirsiniz.");
+    }
+  };
+
   const loadFromArchive = (item: GeneratedItem) => {
     setJob(p => ({
       ...p,
@@ -875,10 +905,7 @@ export default function App() {
                        onMouseLeave={() => setIsZooming(false)}
                        alt="Hero Result"
                      />
-             {/* DEBUG: Show URL to identify broken link source */}
-             <div className="absolute bottom-0 left-0 bg-black text-white text-[10px] p-1 opacity-50">
-               DEBUG URL: {activeImage.image.substring(0, 50)}...
-             </div>
+             {/* DEBUG TRACE REMOVED */}
                       {!isZooming && (
                         <div className="absolute top-4 right-4 bg-indigo-600/90 text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg backdrop-blur-sm border border-indigo-400/30">
                           AI ({activeImage.label})
