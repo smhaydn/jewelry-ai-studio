@@ -333,12 +333,16 @@ export const generateLifestyleImage = async (
     lens: string;
   },
   modelReferenceBase64?: string | null,
-  modelPhysicalDescription?: string, // New argument
+  modelPhysicalDescription?: string,
+  shootMode?: 'catalog' | 'lifestyle', // NEW: Photography mode
   variationMode: 'standard' | 'playful' | 'artistic' = 'artistic',
   detectedMaterial?: { material: string, gemColor: string }
 ): Promise<{ image: string | null; error: string | null }> => {
   const ai = createAI();
-  const model = 'gemini-3-pro-image-preview'; // Keeping Preview model for speed/quality balance
+  const model = 'gemini-3-pro-image-preview';
+
+  // Temporary logging to verify data flow
+  console.log("📸 Shoot Mode:", shootMode || 'lifestyle (default)');
 
   const auraPrompt = AURA_STYLES[variationMode];
   const poseInstruction = getPoseInstruction(category, variationMode, stylePreset);

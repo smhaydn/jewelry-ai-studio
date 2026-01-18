@@ -119,22 +119,22 @@ const PRODUCT_CATEGORIES = [
   { id: 'watch', label: 'Saat (Watch)' },
 ];
 
-const STYLE_PRESETS = [
-  { id: 'minimal', label: 'Stüdyo: Minimal & Temiz', prompt: 'minimalist, clean studio lighting, soft shadows, neutral background, high-end commercial photography, ultra sharp focus', group: 'Stüdyo' },
-  { id: 'luxury', label: 'Stüdyo: Lüks & Altın Işık', prompt: 'luxury lifestyle, golden hour lighting, rich textures, bokeh background, elegant atmosphere, expensive look', group: 'Stüdyo' },
-  { id: 'nature', label: 'Dış Mekan: Doğa & Güneş', prompt: 'outdoor nature shot, sunlight filtering through leaves, organic textures, stone and wood elements, fresh and airy feel', group: 'Dış Mekan' },
-  { id: 'urban', label: 'Dış Mekan: Şehir & Modern', prompt: 'urban chic, city blurred background, modern architecture, glass and concrete, street style fashion', group: 'Dış Mekan' },
-  { id: 'dark', label: 'Sanatsal: Karanlık & Dramatik', prompt: 'dark moody atmosphere, dramatic rim lighting, mystery, high contrast, cinematic look', group: 'Sanatsal' },
-  { id: 'vintage', label: 'Sanatsal: Vintage & Retro', prompt: 'vintage film grain, retro aesthetic, warm tones, nostalgic feel, soft focus', group: 'Sanatsal' },
+// Catalog Presets: Clean, technical product photography
+const CATALOG_PRESETS = [
+  { id: 'pure_white', label: 'Pure White', prompt: 'pure white background, studio lighting, clean product photography, e-commerce catalog', group: 'Catalog' },
+  { id: 'studio_grey', label: 'Studio Grey', prompt: 'neutral grey background, professional studio lighting, commercial product shot', group: 'Catalog' },
+  { id: 'luxury_black', label: 'Luxury Black', prompt: 'black background, dramatic lighting, premium product photography', group: 'Catalog' },
+];
 
-  // New Scenes from User Request (Sahneler.md)
-  { id: 'silk_bed', label: 'İpek & Yatak Odası', prompt: 'lying on silk sheets in a luxury bedroom, soft morning light, intimacy, comfort, elegance', group: 'İç Mekan' },
-  { id: 'cafe_date', label: 'Cafe & Kahve', prompt: 'sitting at a chic parisian cafe, holding a coffee cup, blurred street background, lifestyle, casual luxury', group: 'İç Mekan' },
-  { id: 'poolside', label: 'Havuz Başı & Yaz', prompt: 'lounging by a luxury pool, water reflections, summer vibes, bright sunlight, blue tones, vacation', group: 'Dış Mekan' },
-  { id: 'evening_dress', label: 'Gece Daveti', prompt: 'wearing an elegant evening gown, blurred gala background, chandelier lights, sophistication, glamour', group: 'Etkinlik' },
-  { id: 'office_chic', label: 'Ofis Şıklığı', prompt: 'modern office setting, professional attire, confident pose, glass walls, corporate luxury', group: 'İş Hayatı' },
-  { id: 'car_interior', label: 'Lüks Araç İçi', prompt: 'inside a luxury car, leather seats, steering wheel detail, travel, wealthy lifestyle', group: 'Seyahat' },
-  { id: 'mirror_selfie', label: 'Ayna Selfie', prompt: 'mirror selfie aesthetic, holding phone, bathroom or dressing room, casual but stylish, influencer vibe', group: 'Sosyal Medya' },
+// Lifestyle Presets: Creative, contextual scenes
+const LIFESTYLE_PRESETS = [
+  { id: 'lazy_sunday', label: 'Lazy Sunday', prompt: 'relaxed home setting, cozy couch or bed, natural morning light, casual lifestyle', group: 'Home' },
+  { id: 'getting_ready', label: 'Getting Ready', prompt: 'bathroom or dressing room, mirror selfie aesthetic, getting ready vibe, soft lighting', group: 'Home' },
+  { id: 'kitchen_mess', label: 'Kitchen Mess', prompt: 'kitchen counter, casual home setting, coffee cup, morning routine, authentic lifestyle', group: 'Home' },
+  { id: 'car_interior', label: 'Car Interior', prompt: 'inside luxury car, leather seats, steering wheel detail, travel lifestyle', group: 'Travel' },
+  { id: 'street_style', label: 'Street Style', prompt: 'urban outdoor, city background, walking shot, street fashion, natural daylight', group: 'Outdoor' },
+  { id: 'cafe_date', label: 'Cafe Date', prompt: 'sitting at cafe, coffee cup, blurred street background, casual luxury', group: 'Social' },
+  { id: 'poolside', label: 'Poolside', prompt: 'lounging by pool, water reflections, summer vibes, vacation lifestyle', group: 'Travel' },
 ];
 
 const ASPECT_RATIOS = [
@@ -170,6 +170,7 @@ export default function App() {
   // --- STATE ---
   const [activeTab, setActiveTab] = useState<'studio' | 'models' | 'batch' | 'archive'>('studio');
   const [modelTab, setModelTab] = useState<'Female' | 'Male'>('Female');
+  const [shootMode, setShootMode] = useState<'catalog' | 'lifestyle'>('lifestyle'); // NEW: Dual-mode toggle
   const [models, setModels] = useState<ModelPersona[]>([]); // Load from DB
   const [archive, setArchive] = useState<GeneratedItem[]>([]); // Load from DB or Local
 
@@ -184,7 +185,7 @@ export default function App() {
     prompt: '',
     debugLog: [],
     category: 'ring',
-    stylePreset: STYLE_PRESETS[0].prompt,
+    stylePreset: LIFESTYLE_PRESETS[0].prompt, // Default to lifestyle mode
     aspectRatio: '1:1',
     logoImage: null,
     showBranding: false,
@@ -336,7 +337,7 @@ export default function App() {
 
       setJob(p => ({ ...p, status: 'generating' }));
 
-      const selectedScene = STYLE_PRESETS.find(s => s.prompt === job.stylePreset) || STYLE_PRESETS[0];
+      const selectedScene = (shootMode === 'catalog' ? CATALOG_PRESETS : LIFESTYLE_PRESETS).find(s => s.prompt === job.stylePreset) || (shootMode === 'catalog' ? CATALOG_PRESETS[0] : LIFESTYLE_PRESETS[0]);
 
       const result = await generateLifestyleImage(
         job.productImages,
@@ -350,7 +351,8 @@ export default function App() {
           lens: '50mm',
         },
         selectedModel.image,
-        selectedModel.physicalDescription // New argument
+        selectedModel.physicalDescription,
+        shootMode // NEW: Pass shootMode parameter
       );
 
       if (result.error) throw new Error(result.error);
@@ -361,7 +363,7 @@ export default function App() {
       // --- ARCHIVE SAVING (Hybrid Cloud) ---
       let finalImageUrl = result.image;
       let isCloud = false;
-      const selectedPresetLabel = STYLE_PRESETS.find(s => s.prompt === job.stylePreset)?.label || 'Artistic';
+      const selectedPresetLabel = (shootMode === 'catalog' ? CATALOG_PRESETS : LIFESTYLE_PRESETS).find(s => s.prompt === job.stylePreset)?.label || 'Generated';
 
       // Try uploading to Supabase to save local storage space
       if (supabase) {
@@ -843,23 +845,59 @@ export default function App() {
                   </div>
                 </div>
               </div>
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <h3 className="font-bold text-slate-900 mb-2 flex items-center gap-2 text-sm"><SwatchIcon className="h-4 w-4 text-pink-600" /> Atmosfer</h3>
-                <div className="relative">
-                  <select
-                    value={job.stylePreset}
-                    onChange={(e) => setJob(p => ({ ...p, stylePreset: e.target.value }))}
-                    className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold py-2 pl-3 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer transition-colors hover:bg-slate-100"
-                  >
-                    {Array.from(new Set(STYLE_PRESETS.map(s => s.group))).map(group => (
-                      <optgroup key={group} label={group}>
-                        {STYLE_PRESETS.filter(s => s.group === group).map(s => (
-                          <option key={s.id} value={s.prompt}>{s.label}</option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500"><ChevronDownIcon className="h-4 w-4" /></div>
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                {/* Mode Toggle Buttons */}
+                <div>
+                  <h3 className="font-bold text-slate-900 mb-2 text-sm">Photography Mode</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => {
+                        setShootMode('catalog');
+                        setJob(p => ({ ...p, stylePreset: CATALOG_PRESETS[0].prompt }));
+                      }}
+                      className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-bold text-sm transition-all ${shootMode === 'catalog'
+                        ? 'bg-indigo-600 text-white shadow-lg ring-2 ring-indigo-200'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                    >
+                      <CubeIcon className="h-5 w-5" />
+                      Katalog Çekimi
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShootMode('lifestyle');
+                        setJob(p => ({ ...p, stylePreset: LIFESTYLE_PRESETS[0].prompt }));
+                      }}
+                      className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-bold text-sm transition-all ${shootMode === 'lifestyle'
+                        ? 'bg-purple-600 text-white shadow-lg ring-2 ring-purple-200'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                    >
+                      <SparklesIcon className="h-5 w-5" />
+                      Lifestyle Kreatif
+                    </button>
+                  </div>
+                </div>
+
+                {/* Atmosfer Dropdown */}
+                <div>
+                  <h3 className="font-bold text-slate-900 mb-2 flex items-center gap-2 text-sm"><SwatchIcon className="h-4 w-4 text-pink-600" /> Atmosfer</h3>
+                  <div className="relative">
+                    <select
+                      value={job.stylePreset}
+                      onChange={(e) => setJob(p => ({ ...p, stylePreset: e.target.value }))}
+                      className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold py-2 pl-3 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer transition-colors hover:bg-slate-100"
+                    >
+                      {Array.from(new Set((shootMode === 'catalog' ? CATALOG_PRESETS : LIFESTYLE_PRESETS).map(s => s.group))).map(group => (
+                        <optgroup key={group} label={group}>
+                          {(shootMode === 'catalog' ? CATALOG_PRESETS : LIFESTYLE_PRESETS).filter(s => s.group === group).map(s => (
+                            <option key={s.id} value={s.prompt}>{s.label}</option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500"><ChevronDownIcon className="h-4 w-4" /></div>
+                  </div>
                 </div>
               </div>
 
