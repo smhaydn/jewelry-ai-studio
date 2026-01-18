@@ -10,14 +10,14 @@ export interface AnalysisResult {
 
 // 1. AURA DEFINITIONS (Lighting Removed - Now Dynamic)
 const AURA_STYLES = {
-  standard: "PURE COMMERCIAL STUDIO PHOTOGRAPHY. \n    BACKGROUND: Solid Neutral Colors (White, Light Grey, Beige) ONLY. NO PLANTS, NO FURNITURE, NO SCENERY. \n    FOCUS: Macro shot of the product. If it's a ring, show HAND ONLY. If it's a necklace, show NECK ONLY. \n    VIBE: E-Commerce Product Listing. Clean, sterile, professional.",
-  playful: "LIFESTYLE INFLUENCER AESTHETIC. MEDIUM SHOT (Waist up). Candid, authentic. The model looks relaxed and happy. The jewelry is just a detail in her outfit, NOT the main focus.",
-  artistic: "FINE ART BEAUTY EDITORIAL. 'SCULPTURAL & ORGANIC'. \n    STYLING: MINIMALIST. Bare skin (shoulders/neck), soft silk draping. NO BLAZERS. \n    COMPOSITION: MEDIUM PORTRAIT (Chest up). Allow breathing room around the model. The jewelry is DELICATE and SMALL in the frame. \n    MOOD: Intimate, Breathless, Expensive.",
+  standard: "PURE PRODUCT HERO CATALOG PHOTOGRAPHY. \\n    FOCUS: The product is the absolute center of page. Show the full item clearly and sharply. \\n    CAMERA: Shot on Sony A7R IV, 90mm Macro or 85mm Prime. f/11 Aperture for edge-to-edge sharpness. \\n    BACKGROUND: Solid Studio Light Grey or Warm White ONLY. No scenery. No windows. \\n    VIBE: High-end E-commerce Catalog (like Net-A-Porter). Sterile, clinical, perfectly balanced. \\n    STRICT CONSTRAINT: NO EMOTION. NO STORY. NO LIFESTYLE CONTEXT. THE PRODUCT IS THE ABSOLUTE HERO.",
+  playful: "LIFESTYLE INFLUENCER AESTHETIC. MEDIUM SHOT (Waist up). \\n    CAMERA: Shot on Sony A7R IV, 85mm G-Master Lens, f/1.8 Aperture. Bokeh background. \\n    SKIN DEEP PROTOCOL: Visible vellus hair (peach fuzz), distinct pores, slight imperfections, freckles. REAL HUMAN SKIN. \\n    VIBE: Candid, authentic. Golden hour sunlight or cozy cafe lighting. Slightly grainy film look.",
+  artistic: "HIGH-END COMMERCIAL CAMPAIGN AESTHETIC. 'ASPIRATIONAL & POWERFUL'. \n    CHARACTER SOUL: Quiet confidence, regal posture, sharp intelligent gaze. Not a model, but a person of influence. \n    STYLING: MINIMALIST LUXURY. Bare skin (shoulders/neck), soft silk draping, or high-end natural linen. NO BLAZERS. \n    LIGHTING: CARTIER-STYLE CAMPAIGN LIGHTING. High-contrast Rim light. Global Illumination. Ray-traced shadows with golden highlights. \n    COMPOSITION: THE DECISIVE MOMENT. A candid, powerful capture. Allow breathing room (Medium Portrait). \n    SKIN & TEXTURE: Ultra-High Definition. Imperfect skin is premium. Visible pores. \n    REAR-END FINISH: Analog film grain (Kodak Portra 400 feel), subtle lens flare, high-fashion editorial color grading. The jewelry is the HERO, small but striking.",
 };
 
 export const analyzeJewelry = async (productImagesBase64: string[], category: string): Promise<AnalysisResult> => {
   const ai = createAI();
-  const model = 'gemini-2.5-flash';
+  const model = 'gemini-1.5-flash';
 
   const prompt = `
     Look at these images of a ${category}.
@@ -38,47 +38,96 @@ export const analyzeJewelry = async (productImagesBase64: string[], category: st
     parts.push({ inlineData: { mimeType: 'image/jpeg', data: img } });
   });
 
-  const response = await ai.models.generateContent({
-    model,
-    contents: { parts },
-    config: {
-      responseMimeType: 'application/json',
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          scenePrompt: { type: Type.STRING },
-          material: { type: Type.STRING },
-          gemColor: { type: Type.STRING }
-        }
+  try {
+    const result = await ai.models.generateContent({
+      model,
+      contents: [{ role: 'user', parts }],
+      generationConfig: {
+        responseMimeType: 'application/json',
       }
-    }
-  });
+    });
 
-  if (!response.text) throw new Error("No analysis generated");
-  return JSON.parse(response.text) as AnalysisResult;
+    const text = result.response.text();
+    if (!text) throw new Error("No analysis generated");
+    return JSON.parse(text) as AnalysisResult;
+
+  } catch (error) {
+    console.warn("Analysis failed, using fallback:", error);
+    // FALLBACK: Return a safe default instead of crashing user flow
+    return {
+      scenePrompt: "Clean luxury studio background, high-end photography",
+      material: "Gold",
+      gemColor: "None"
+    };
+  }
 };
 
 // 2. DYNAMIC POSING & NEGATIVE CONSTRAINTS
-const getPoseInstruction = (category: string, variationMode: string): string => {
+const getPoseInstruction = (category: string, variationMode: string, stylePreset: string): string => {
   const cat = category.toLowerCase();
+  const preset = stylePreset.toLowerCase();
 
   // GLOBAL NEGATIVE CONSTRAINTS (Baseline)
-  const baseNegative = "NEGATIVE CONSTRAINT: NO multiple jewelry pieces. NO conflicting accessories. NO busy patterns on clothing.";
+  const baseNegative = "NEGATIVE CONSTRAINT: NO GIANT JEWELRY. NO OVERSIZED STONES. NO CHUNKY BANDS. NO COSTUME JEWELRY LOOK. NO THICK METAL. NO 3D RENDER LOOK. NO SMOOTH PLASTIC SKIN.";
 
-  // If Standard mode
+  // If Standard mode - Category Specific Technical Poses
   if (variationMode === 'standard') {
-    return `${baseNegative} Standard commercial framing. Focus on the product placement. Clean composition.`;
+    let techPose = "Standard commercial framing. Focus on product placement.";
+    if (cat.includes('yüzük') || cat.includes('ring')) techPose = "HAND ONLY. Flat on surface or elegantly resting. Center the ring.";
+    if (cat.includes('kolye') || cat.includes('necklace')) techPose = "NECK AND CHEST ONLY. Symmetrical placement. Head looking forward or slightly away.";
+    if (cat.includes('küpe') || cat.includes('earring')) techPose = "EAR AND JAWLINE ONLY. Profile shot. Product is perfectly vertical.";
+
+    return `${baseNegative} ${techPose} No backgrounds. Direct studio lighting.`;
+  }
+
+  // --- SCENE CONTEXT LOGIC (NEW: Phase 17) ---
+  let sceneContextPose = "";
+
+  // 1. Bedroom / Boudoir / Silk
+  if (preset.includes('bed') || preset.includes('morning') || preset.includes('silk') || preset.includes('yatak') || preset.includes('sheets')) {
+    sceneContextPose = "CONTEXT POSE: RECLINING / RELAXED. Model is lying back on pillows or silk sheets. Soft, lazy morning energy. Arms stretched overhead or hand running through hair.";
+  }
+  // 2. Cafe / Restaurant
+  else if (preset.includes('cafe') || preset.includes('coffee') || preset.includes('kafe')) {
+    sceneContextPose = "CONTEXT POSE: SITTING AT TABLE. Leaning forward slightly, elbows on table. Engaging in conversation. Holding a cup or resting chin on hand.";
+  }
+  // 3. Pool / Beach / Yacht
+  else if (preset.includes('pool') || preset.includes('swim') || preset.includes('havuz') || preset.includes('yacht') || preset.includes('tekne')) {
+    sceneContextPose = "CONTEXT POSE: SUNBATHING / LOUNGING. Head tilted back towards the sun. Eyes closed or looking at horizon. Wet hair look. Relaxed luxury.";
+  }
+  // 4. Street / Urban / City
+  else if (preset.includes('street') || preset.includes('city') || preset.includes('sokak') || preset.includes('urban')) {
+    sceneContextPose = "CONTEXT POSE: WALKING / IN MOTION. Captured mid-stride or turning back to look at camera. Hair blowing in wind. Dynamic energy.";
+  }
+  // 5. Nature / Field / Forest
+  else if (preset.includes('nature') || preset.includes('forest') || preset.includes('field') || preset.includes('orman') || preset.includes('tarlası')) {
+    sceneContextPose = "CONTEXT POSE: ETHEREAL WANDERER. Standing amongst tall grass or flowers. Touching nature. Dreamy, absent-minded expression.";
+  }
+  // 6. High-End Event / Box / Night
+  else if (preset.includes('night') || preset.includes('disco') || preset.includes('gece') || preset.includes('dark')) {
+    sceneContextPose = "CONTEXT POSE: SULTRY EVENING. Very confident. Direct eye contact. Shoulders back. 'Bond Girl' energy.";
+  }
+  else {
+    sceneContextPose = "CONTEXT POSE: CLASSIC EDITORIAL. Strong independent posture. Minimal movement. Focus on elegance.";
   }
 
   // --- RING LOGIC ---
   if (cat.includes('yüzük') || cat.includes('ring')) {
     return `
       ${baseNegative} NO BRACELETS. NO WATCHES.
-      COMPOSITION: "HAND-TO-FACE" PORTRAIT.
+      ${sceneContextPose}
+      COMPOSITION: "HAND-TO-FACE" PORTRAIT (Integrated with Scene).
       - The model is touching her face, cheek, or lips with the hand wearing the ring.
       - KEY: We must see the Ring AND the Model's Face clearly.
       - Fingers must look elegant and relaxed, not tense.
-      - Do NOT crop the fingers.
+      *** PARTS MODEL ANATOMY (HANDS): World-class Hand Model. Slender, elongated fingers. Soft knuckles. No bulging veins. Smooth, hydrated skin. ***
+      *** SCALE ANCHOR & RATIO LOCK: 
+      - The ring PROPORTION must be identical to the reference image. 
+      - The ring band is DELICATE (1.2mm - 1.5mm thickness). 
+      - The stone size is REALSITIC (6mm - 12mm range). 
+      - THE RING MUST NOT OVERWHELM THE FINGER. If the product is thin, it must remain thin. 
+      - NEGATIVE: NO bulky metal, no thick oversized bands. 
+      ***
     `;
   }
 
@@ -86,8 +135,9 @@ const getPoseInstruction = (category: string, variationMode: string): string => 
   if (cat.includes('bileklik') || cat.includes('bracelet')) {
     return `
       ${baseNegative} NO RINGS. NO WATCHES.
+      ${sceneContextPose}
       COMPOSITION: ELEGANT ARM PLACEMENT.
-      - Model resting her chin on the back of her hand.
+      - Model resting her chin on the back of her hand, or fixing hair.
       - The bracelet must be prominent in the foreground.
       - Sleeves must be rolled up or sleeveless to show the wrist/forearm.
     `;
@@ -111,10 +161,12 @@ const getPoseInstruction = (category: string, variationMode: string): string => 
 
     return `
       ${baseNegative} NO NECKLACES. NO HATS.
-      COMPOSITION: ${pose}
+      ${sceneContextPose}
+      COMPOSITION: ${pose} (Adapted to Scene)
       - Focus on ear/jawline.
-      - Skin texture must be distinct around the ear.
+      - Skin texture must be distinct around the ear (visible pores).
       - Ensure the earring is NOT hidden by hair.
+      *** SCALE ANCHOR: Compare the jewelry to the Human Ear Lobe. Studs must be 50% SMALLER than the ear lobe. Hoops must be proportionate, staying between the lobe and the shoulder line. DO NOT make them oversized. Accuracy is key. ***
     `;
   }
 
@@ -133,10 +185,18 @@ const getPoseInstruction = (category: string, variationMode: string): string => 
 
     return `
       ${baseNegative} NO RINGS. NO EARRINGS. BARE HANDS.
-      COMPOSITION: ${pose}
-      - HANDS: Hands should NOT block the necklace. Ideally hands are out of frame or resting on head.
+      ${sceneContextPose}
+      COMPOSITION: ${pose} (Adapted to Scene)
+      - HANDS: Hands should NOT block the necklace. Ideally hands are out of frame or resting on head/surface.
       - The necklace must be the STAR.
       - NO HIGH COLLARS apart from Choker style.
+      *** PARTS MODEL ANATOMY (NECK): "The Swan Neck". Long, elegant, graceful neck. Prominent and feminine clavicles (collarbones). Perfect posture. Smooth skin without neck lines. ***
+      *** SCALE ANCHOR & RATIO LOCK: 
+      - The chain is almost invisible (0.8mm - 1.0mm thickness). 
+      - The pendant size is strictly 1-to-1 with its proportion to the human collarbone in real life. 
+      - DO NOT BLOW UP the size for visibility. 
+      - Accuracy over impact. 
+      ***
     `;
   }
 
@@ -144,13 +204,25 @@ const getPoseInstruction = (category: string, variationMode: string): string => 
   if (cat.includes('broş') || cat.includes('brooch')) {
     return `
       ${baseNegative}
+      ${sceneContextPose}
       COMPOSITION: UPPER BODY PORTRAIT.
       - Model wearing a blazer, coat, or thick knit sweater.
       - Brooch pinned clearly on the lapel or chest area.
     `;
   }
 
-  return `${baseNegative} High fashion portrait posing.`;
+  if (variationMode === 'artistic') {
+    return `
+      ${baseNegative}
+      ${sceneContextPose}
+      COMPOSITION: THE ICONIC CAMPAIGN POSE. 
+      - The character is NOT posing for the camera. 
+      - They are in the middle of a high-status action: adjusting a cufflink, looking away thoughtfully before an entrance, or a subtle head tilt that catches the light.
+      - Aspirational energy. Powerful but effortless.
+    `;
+  }
+
+  return `${baseNegative} High fashion portrait posing. ${sceneContextPose}`;
 };
 
 // 3. DYNAMIC LIGHTING ENGINE
@@ -183,6 +255,36 @@ const getLightingInstruction = (variationMode: string, stylePreset: string): str
   return "LIGHTING: Balanced professional lighting.";
 };
 
+// 4. DYNAMIC FASHION & STYLING ENGINE
+const getStylingInstruction = (gemColor?: string): string => {
+  if (!gemColor || gemColor === 'None') return "STYLING: Classic French Manicure. Nude natural makeup. Timeless elegance.";
+
+  const color = gemColor.toLowerCase();
+
+  // RUBY / RED
+  if (color.includes('red') || color.includes('ruby') || color.includes('garnet')) {
+    return "STYLING: NAILS: Deep Bordeaux or Warm Nude polish. MAKEUP: Warm undertones, subtle berry lip tint. Cohesive warm styling.";
+  }
+  // EMERALD / GREEN
+  if (color.includes('green') || color.includes('emerald')) {
+    return "STYLING: NAILS: Soft Beige or Pearl White polish. MAKEUP: Earthy tones, bronzed glow. Sophisticated and grounded.";
+  }
+  // SAPPHIRE / BLUE
+  if (color.includes('blue') || color.includes('sapphire') || color.includes('tanzanite')) {
+    return "STYLING: NAILS: Sheer Pink or Soft Cool Grey polish. MAKEUP: Cool undertones, highlighter on cheekbones. Icy elegance.";
+  }
+  // DIAMOND / WHITE
+  if (color.includes('white') || color.includes('diamond') || color.includes('clear')) {
+    return "STYLING: NAILS: Clean French Manicure or 'Milky White' trend. MAKEUP: 'No-makeup' makeup look, focus on dewy skin.";
+  }
+  // GOLD
+  if (color.includes('gold') || color.includes('yellow')) {
+    return "STYLING: NAILS: Nude/Skin-tone or Soft Gold shimmer. MAKEUP: Golden hour glow, warm blush.";
+  }
+
+  return "STYLING: Elegant, high-fashion grooming. Manicured nails (Nude/Neutral).";
+};
+
 export const generateLifestyleImage = async (
   productImagesBase64: string[],
   baseScenePrompt: string,
@@ -195,15 +297,16 @@ export const generateLifestyleImage = async (
     lens: string;
   },
   modelReferenceBase64?: string | null,
-  variationMode: 'standard' | 'playful' | 'artistic' = 'standard',
+  variationMode: 'standard' | 'playful' | 'artistic' = 'artistic',
   detectedMaterial?: { material: string, gemColor: string }
-) => {
+): Promise<{ image: string | null; error: string | null }> => {
   const ai = createAI();
   const model = 'gemini-3-pro-image-preview'; // Keeping Preview model for speed/quality balance
 
   const auraPrompt = AURA_STYLES[variationMode];
-  const poseInstruction = getPoseInstruction(category, variationMode);
+  const poseInstruction = getPoseInstruction(category, variationMode, stylePreset);
   const lightingInstruction = getLightingInstruction(variationMode, stylePreset);
+  const stylingInstruction = getStylingInstruction(detectedMaterial?.gemColor); // NEW: Dynamic Styling
 
   // STRICT FIDELITY INSTRUCTIONS
   let fidelityInstruction = "";
@@ -221,24 +324,30 @@ export const generateLifestyleImage = async (
 
   if (variationMode === 'standard') {
     fidelityInstruction = `
-    *** CRITICAL: SOURCE OF TRUTH IS THE INPUT IMAGE ***
-    - The images provided are the REFERENCE PRODUCT.
-    - You must COMPOSITE this exact jewelry onto the model.
-    - DO NOT redesign the jewelry. DO NOT add extra stones.
+    *** PIXEL-PERFECT PRODUCT FIDELITY: SACRED GEOMETRY LOCK ***
+    - The SOURCE images are the ONLY truth. 
+    - You MUST use the exact design, stone layout, and metal structure provided.
+    - DO NOT add extra stones. DO NOT change the metal thickness.
+    - DO NOT redesign the prong settings or the band.
+    - Think of this as a composite/placement task, not a generative one.
     ${materialConstraint}
     `;
   } else {
     fidelityInstruction = `
-    - Feature the jewelry shown in the input images.
+    - *** STRICT GEOMETRY & SCALE LOCK ***: You are FORBIDDEN from enlarging the jewelry. 
+    - MAINTAIN THE RATIO: Look at the size of the jewelry relative to the background/original props in the source image. REPLICATE THAT EXACT RATIO on the human model.
+    - If the jewelry looks small in the source, it MUST look small on the model.
     ${materialConstraint}
-    - The aesthetic mood is the priority here, but the product must remain recognizable.
+    - Aesthetic mood is secondary to MILLIMETRIC SCALE ACCURACY. The product is FINE JEWELRY, not costume jewelry.
     `;
   }
 
-  // Explicit Subject Line
-  const subjectLine = `SUBJECT: Professional model wearing a ${category}.`;
+  // Explicit Subject Line (Lower weight to model in standard mode)
+  const subjectLine = variationMode === 'standard'
+    ? `SUBJECT: High-end technical catalog shot of a ${category}.`
+    : `SUBJECT: Professional model wearing a ${category}.`;
 
-  // MODEL INJECTION (MOVED TO TOP PRIORITY)
+  // MODEL INJECTION (Restored Legacy Logic)
   let modelIdentityPrompt = "";
   if (modelReferenceBase64) {
     modelIdentityPrompt = `
@@ -255,32 +364,56 @@ export const generateLifestyleImage = async (
   let fullPrompt = `
     ${modelIdentityPrompt}
     ${subjectLine}
-    
-    AESTHETIC & ATMOSPHERE (THE AURA):
+
+  AESTHETIC & ATMOSPHERE(THE AURA):
     ${auraPrompt}
-    
-    LIGHTING & MOOD:
+
+  LIGHTING & MOOD:
     ${lightingInstruction}
-    
-    POSING & COMPOSITION (THE ANATOMY):
+
+  POSING & COMPOSITION(THE ANATOMY):
     ${poseInstruction}
-    
-    ENVIRONMENT: ${stylePreset}
+
+  FASHION & STYLING(THE LOOK):
+    ${stylingInstruction}
+
+  ENVIRONMENT: ${stylePreset}
     
     ${fidelityInstruction}
 
-    REALISTIC SIZE & SCALE (MANDATORY):
-    - *** NEGATIVE CONSTRAINT: DO NOT GENERATE GIANT JEWELRY. ***
-    - The jewelry size must be MICROSCOPICALLY ACCURATE to real life.
-    - NECKLACE: Must fit delicately on the neck. It is small. It is NOT a breastplate.
-    - RING: Must be small and fit on a single finger.
-    - EARRING: Must be ear-sized, not shoulder-sized.
-    - Camera must be far enough back to show the jewelry in context (Medium Shot), NOT a Macro Zoom.
+    REALISTIC SIZE & SCALE(MANDATORY & CRITICAL):
+    - *** RATIO LOCK PROTOCOL: REPLICATE THE PRODUCT - TO - BODY RATIO FROM SOURCE. ***
+    - PREVENT "AI BLOAT": AI models tend to enlarge jewelry for visibility.YOU MUST RESIST THIS.
+    - ** IF IN DOUBT, MAKE THE JEWELRY SMALLER. **
+    - FINE JEWELRY STANDARDS: Metal is thin, elegant, and precise. 
+    - RING: Band width approx 1.2mm.Stone length max 10mm.DO NOT MAKE IT LOOK LIKE COSTUME JEWELRY.
+    - NECKLACE: Chain width approx 0.8mm(Invisible Thread).Pendants are OFTEN SMALL(1cm - 2cm). 
+    - EARRING: Earring height approx 5mm - 15mm(studs / small drops).
+    - Camera must be far enough back to show the jewelry in its true, delicate context.
 
-    REALISM:
-    - Skin texture must be 8k resolution, raw photo quality, visible pores, freckles (if applicable), fine hair.
-    - No plastic AI skin.
-  `;
+    HYPER - REALISM & ANATOMY(THE "HUMAN PERFECTION" STANDARD):
+    - ** ANATOMY PRIORITY: WORLD - CLASS PARTS MODEL STANDARD. **
+    - HANDS: Slender, elegant, soft knuckles.NO distorted fingers.NO veins.
+    - EARS: Small, tucked, perfect helix structure.
+    - NECK: Swan - like, long, smooth.
+    - CHEST / DECOLLETAGE: Smooth skin, perfect bone structure(clavicles).
+    
+    - SKIN TEXTURE(NOT PLASTIC):
+  - The goal is "High-End Magazine Retouch", NOT "Computer Generated".
+    - Visible pores ? YES.
+    - Real skin texture ? YES.
+    - Plastic smoothness ? NO.
+    - ** REFERENCE FIDELITY: The reference model is already perfect.DO NOT "FIX" HER.Just copy her exact skin reality. **
+
+    *** SENSITIVE IDENTITY CHECK(SANDWICH LOCK) ***
+    - FINAL VERIFICATION: DOES THE FACE LOOK LIKE THE SISTER OF THE REFERENCE ?
+      - IT MUST BE THE * SAME PERSON *.
+    - If the reference has freckles, the output MUST have freckles.
+    - If the reference has a specific nose shape, the output MUST match.
+    - IGNORE "BEAUTY FILTERS".WE WANT THE REAL FACE.
+    - KEEP THE IDENTITY 100 % LOCKED.
+    *** END IDENTITY LOCK ***
+    `;
 
   const parts: any[] = [{ text: fullPrompt }];
 
@@ -296,8 +429,8 @@ export const generateLifestyleImage = async (
 
   const response = await ai.models.generateContent({
     model,
-    contents: { parts },
-    config: {
+    contents: [{ role: 'user', parts }],
+    generationConfig: {
       imageConfig: {
         aspectRatio: technicalSettings.aspectRatio,
         imageSize: '2K'
@@ -306,52 +439,60 @@ export const generateLifestyleImage = async (
   });
 
   const responseParts = response.candidates?.[0]?.content?.parts;
-  if (!responseParts) throw new Error("No image generated");
+  if (!responseParts) return { image: null, error: "Görsel oluşturulamadı (API Yanıtı Boş)" };
 
   for (const part of responseParts) {
     if (part.inlineData) {
-      return part.inlineData.data;
+      return { image: part.inlineData.data, error: null };
     }
   }
 
-  throw new Error("No image data found");
+  return { image: null, error: "Görsel verisi bulunamadı" };
 };
 
 export const generateJewelryVideo = async (inputImageBase64: string, category: string, stylePreset: string): Promise<string> => {
-  const ai = createAI();
-  const model = 'veo-3.1-fast-generate-preview';
+  try {
+    const ai = createAI();
+    const model = 'veo-3.1-fast-generate-preview';
 
-  const videoPrompt = `
-    Cinematic luxury jewelry shot.
-    The product is the hero.
-    Atmosphere: ${stylePreset}.
-    Subtle motion: Light reflections moving on the metal (caustics), model breathing very slightly.
-    High fidelity. 4K.
-  `;
+    const videoPrompt = "Cinematic luxury jewelry shot. The product is the hero. Atmosphere: " + stylePreset + ". Subtle motion: Light reflections moving on the metal (caustics), model breathing very slightly. High fidelity. 4K.";
 
-  let operation = await ai.models.generateVideos({
-    model,
-    prompt: videoPrompt,
-    image: {
-      imageBytes: inputImageBase64,
-      mimeType: 'image/png',
-    },
-    config: {
-      numberOfVideos: 1,
-      resolution: '720p',
-      aspectRatio: '9:16'
+    let operation = await ai.models.generateVideos({
+      model: model,
+      prompt: videoPrompt,
+      image: {
+        imageBytes: inputImageBase64,
+        mimeType: 'image/png',
+      },
+      config: {
+        numberOfVideos: 1,
+        resolution: '720p',
+        aspectRatio: '9:16'
+      }
+    });
+
+    // Polling with safety timeout (max 60s)
+    let attempts = 0;
+    while (!operation.done && attempts < 20) {
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      operation = await ai.operations.getVideosOperation({ operation: operation });
+      attempts++;
     }
-  });
 
-  while (!operation.done) {
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    operation = await ai.operations.getVideosOperation({ operation: operation });
+    const videoUri = operation.response?.generatedVideos?.[0]?.video?.uri;
+    if (!videoUri) throw new Error("Video timeline timeout");
+
+    // Clean fetch construction
+    const fetchUrl = videoUri + "&key=" + import.meta.env.VITE_GEMINI_API_KEY;
+    const response = await fetch(fetchUrl);
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
+
+  } catch (error: any) {
+    console.error("Video Gen Error:", error);
+    if (error.message?.includes("429") || error.message?.includes("Quota")) {
+      throw new Error("Video kotası dolu.");
+    }
+    throw new Error("Video servisi hatası: " + (error.message || "Bilinmeyen"));
   }
-
-  const videoUri = operation.response?.generatedVideos?.[0]?.video?.uri;
-  if (!videoUri) throw new Error("Video generation failed");
-
-  const response = await fetch(`${videoUri}&key=${import.meta.env.VITE_GEMINI_API_KEY}`);
-  const blob = await response.blob();
-  return URL.createObjectURL(blob);
 };
