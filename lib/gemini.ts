@@ -386,6 +386,42 @@ export const generateLifestyleImage = async (
   // MODE 1: CATALOG (STERILE E-COMMERCE)
   // ========================================
   if (shootMode === 'catalog') {
+    // Category-specific scale instructions
+    let categoryScalePrompt = "";
+    const categoryLower = category.toLowerCase();
+
+    if (categoryLower.includes('ring') || categoryLower.includes('yüzük')) {
+      categoryScalePrompt = `
+      *** RING-SPECIFIC SCALE RULES ***
+      - THE RING BAND RULE: The inner diameter of the ring MUST match the width of the model's finger exactly.
+      - FLESH INTERACTION: Focus on the connection point between the finger and the ring. The skin should slightly press against the metal (realistic contact).
+      - NO FLOATING: The ring must sit TIGHTLY on the skin, hugging the finger bone.
+      - KNUCKLE TEST: The ring should NOT be wider than the knuckle. If it's a chunky/statement ring, preserve its volume but ensure it fits the finger bone.
+      - RATIO: The ring should occupy roughly 15-20% of the hand's total vertical length, NOT 50%.
+      `;
+    } else if (categoryLower.includes('necklace') || categoryLower.includes('kolye')) {
+      categoryScalePrompt = `
+      *** NECKLACE-SPECIFIC SCALE RULES ***
+      - Chain width should be delicate (approx 0.8mm - invisible thread aesthetic).
+      - Pendant size: typically 1cm - 2cm, NOT oversized.
+      - The necklace should rest naturally on the collarbone/chest, not float.
+      `;
+    } else if (categoryLower.includes('earring') || categoryLower.includes('küpe')) {
+      categoryScalePrompt = `
+      *** EARRING-SPECIFIC SCALE RULES ***
+      - Earring height: approx 5mm - 15mm for studs/small drops.
+      - The earring should sit flush against the earlobe, not dangle unnaturally.
+      - Ear size reference: Human earlobes are typically 1.5cm - 2cm in length.
+      `;
+    } else if (categoryLower.includes('bracelet') || categoryLower.includes('bileklik')) {
+      categoryScalePrompt = `
+      *** BRACELET-SPECIFIC SCALE RULES ***
+      - The bracelet should wrap around the wrist naturally, with slight gap for movement.
+      - Width: typically 2mm - 8mm for delicate pieces.
+      - Should NOT look like a bangle unless specified.
+      `;
+    }
+
     fullPrompt = `
     ${modelIdentityPrompt}
 
@@ -394,10 +430,12 @@ export const generateLifestyleImage = async (
     SUBJECT: High-end technical product photography of a ${category}.
     
     CAMERA SETTINGS:
-    - Shot on Sony A7R IV, 100mm Macro Lens
-    - Aperture: f/16 (Everything in sharp focus, no bokeh)
+    - Shot on Sony A7R IV, 85mm Lens (NOT 100mm Macro)
+    - Aperture: f/11 to f/16 (Everything in sharp focus, no bokeh)
     - ISO: 100 (Clean, noise-free)
     - Shutter: 1/125s (Studio sync)
+    - FRAMING: Medium Close-Up (Chest up or Waist up). DO NOT frame only the hand/jewelry.
+    - CRITICAL: Showing more of the body helps establish correct scale. The hand must look proportional to the torso.
     
     LIGHTING:
     - Studio Softbox Lighting (3-point setup)
@@ -431,6 +469,22 @@ export const generateLifestyleImage = async (
     - Net-A-Porter / Farfetch catalog style
     - Perfectionist, controlled, technical
     
+    *** CRITICAL: PHYSICS & SCALE ENFORCEMENT (THE GOLDEN RULE) ***
+    
+    - OBJECTIVE: The jewelry must look WEARABLE and REALISTIC in size.
+    - SIZE CALIBRATION:
+      - If the input image shows a "Chunky/Statement Ring" (like an Amber ring), preserve its volume but ensure it fits the finger bone.
+      - DO NOT make the jewelry wider than anatomically possible (e.g., ring wider than knuckle).
+      - DO NOT scale the jewelry up to show detail. It is better to have a smaller, realistic piece than a giant, fake-looking one.
+      - RATIO: Jewelry should occupy a realistic proportion of the body part (15-20% for rings, NOT 50%).
+    - NO AI BLOAT: AI models tend to enlarge jewelry for visibility. YOU MUST RESIST THIS URGE.
+    - IF IN DOUBT, MAKE THE JEWELRY SMALLER.
+    - FINE JEWELRY STANDARDS: Metal is thin, elegant, and precise. This is NOT costume jewelry.
+    
+    ${categoryScalePrompt}
+    
+    *** END SCALE ENFORCEMENT ***
+    
     NEGATIVE PROMPT (STRICTLY FORBIDDEN):
     - NO blurry background
     - NO messy hair
@@ -439,6 +493,8 @@ export const generateLifestyleImage = async (
     - NO candid moments
     - NO natural imperfections
     - NO bokeh or shallow depth of field
+    - NO oversized jewelry (giant props)
+    - NO floating jewelry (must touch skin)
     
     PRODUCT FIDELITY:
     - The product images are SACRED. Do not alter the design.
