@@ -31,8 +31,50 @@ import { createClient } from '@supabase/supabase-js';
 
 // --- CONFIGURATION ---
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase = (SUPABASE_URL && SUPABASE_KEY) ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+// --- SUPABASE STORAGE HELPER ---
+const uploadToSupabase = async (base64Image: string): Promise<string | null> => {
+  if (!supabase) return null;
+  try {
+    // 1. Convert Base64 to Blob
+    const byteString = atob(base64Image);
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    const blob = new Blob([ab], { type: 'image/jpeg' });
+
+    // 2. Generate Unique Filename
+    const fileName = `generated_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
+
+    // 3. Upload
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('jewelry-archive') // Bucket Name
+      .upload(fileName, blob, {
+        contentType: 'image/jpeg',
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (uploadError) {
+      console.error("Supabase Upload Error:", uploadError);
+      return null;
+    }
+
+    // 4. Get Public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('jewelry-archive')
+      .getPublicUrl(fileName);
+
+    return publicUrl;
+  } catch (err) {
+    console.error("Upload failed unexpected:", err);
+    return null;
+  }
+};
 
 // --- TYPES & INTERFACES ---
 interface GeneratedItem {
@@ -292,28 +334,53 @@ export default function App() {
 
       // 3. COMPLETE
       const genTime = elapsedTime; // Capture final time
+      // --- ARCHIVE SAVING (Hybrid Cloud) ---
+      let finalImageUrl = result.image;
+      let isCloud = false;
+      const selectedPresetLabel = STYLE_PRESETS.find(s => s.prompt === job.stylePreset)?.label || 'Artistic';
+
+      // Try uploading to Supabase to save local storage space
+      if (supabase) {
+        const cloudUrl = await uploadToSupabase(result.image);
+        if (cloudUrl) {
+          finalImageUrl = cloudUrl; // Use the URL instead of Base64
+          isCloud = true;
+        }
+      }
+
       const newItem: GeneratedItem = {
         id: Date.now().toString(),
-        image: result.image,
-        label: STYLE_PRESETS.find(s => s.prompt === job.stylePreset)?.label || 'Artistic',
+        image: isCloud ? finalImageUrl : result.image, // Store URL if cloud success, else Base64 (fallback)
+        label: selectedPresetLabel,
         date: new Date().toLocaleTimeString(),
         type: 'standard',
         generationTime: genTime
       };
 
-      // Auto-save to archive
-      const updatedArchive = [newItem, ...archive];
-      setArchive(updatedArchive);
-      localStorage.setItem('jewelry_archive', JSON.stringify(updatedArchive));
-
-      setJob(p => ({
-        ...p,
+      setJob(prev => ({
+        ...prev,
         isGenerating: false,
-        status: 'complete',
-        gallery: [newItem], // Single output mode
+        resultImage: result.image, // Keep high-res base64 for immediate display
+        gallery: [newItem], // Show in gallery
         selectedImageId: newItem.id,
         generationTime: genTime
       }));
+
+      // --- PERSISTENCE ---
+      const updatedArchive = [newItem, ...archive];
+      setArchive(updatedArchive);
+
+      try {
+        localStorage.setItem('jewelry_archive', JSON.stringify(updatedArchive));
+      } catch (e) {
+        console.error("Local Storage Quota Warning:", e);
+        // If quota still hit (rare with URLs), trim old items
+        if (updatedArchive.length > 20) {
+          const trimmed = updatedArchive.slice(0, 20);
+          setArchive(trimmed);
+          localStorage.setItem('jewelry_archive', JSON.stringify(trimmed));
+        }
+      }
 
     } catch (err: any) {
       setJob(p => ({ ...p, isGenerating: false, status: 'failed', error: err.message }));
@@ -529,7 +596,7 @@ export default function App() {
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {archive.map((item, idx) => (
                 <div key={idx} className="bg-white p-2 rounded-lg border border-slate-200 shadow-sm group relative">
-                  <img src={`data:image/png;base64,${item.image}`} className="w-full h-40 object-cover rounded-md bg-slate-100" />
+                  <img src={item.image.startsWith('http') ? item.image : `data:image/png;base64,${item.image}`} className="w-full h-40 object-cover rounded-md bg-slate-100" />
                   <div className="mt-2">
                     <p className="font-bold text-xs text-slate-900 truncate">{item.label}</p>
                     <p className="text-[10px] text-slate-500">{item.date}</p>
