@@ -26,7 +26,7 @@ import {
   VideoCameraIcon,
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
-import { generateLifestyleImage, JewelryProduct, ModelPersona, JOB_STATUS_MESSAGES, JobStatusKey, ANALYSIS_FALLBACK } from './lib/gemini';
+import { generateLifestyleImage, analyzeJewelry, generateJewelryVideo, AnalysisResult, JewelryProduct, ModelPersona, JOB_STATUS_MESSAGES, JobStatusKey, ANALYSIS_FALLBACK } from './lib/gemini';
 import { createClient } from '@supabase/supabase-js';
 
 // --- CONFIGURATION ---
@@ -401,12 +401,37 @@ export default function App() {
     localStorage.setItem('jewelry_archive', JSON.stringify(updated));
   };
 
-  const downloadImage = (base64: string, filename: string) => {
-    const link = document.createElement('a');
-    link.href = `data:image/png;base64,${base64}`;
-    link.download = filename;
-    link.click();
+  // --- DOWNLOAD HELPER ---
+  const downloadImage = async (imageUrl: string, filename: string) => {
+    try {
+      let href = imageUrl;
+      if (imageUrl.startsWith('http')) {
+        // If external URL (Supabase), fetch as blob to avoid CORS/Browser open-in-tab issues
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        href = URL.createObjectURL(blob);
+      } else if (!imageUrl.startsWith('data:')) {
+        // If raw base64 without prefix
+        href = `data:image/png;base64,${imageUrl}`;
+      }
+
+      const link = document.createElement('a');
+      link.href = href;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      if (imageUrl.startsWith('http')) {
+        setTimeout(() => URL.revokeObjectURL(href), 1000);
+      }
+    } catch (e) {
+      console.error("Download failed:", e);
+      alert("İndirme başlatılamadı. Görsele sağ tıklayıp 'Farklı Kaydet' diyebilirsiniz.");
+    }
   };
+
+
 
   const downloadBranded = async (type: 'original' | '9:16' | '4:5') => {
     const activeItem = job.gallery.find(i => i.id === job.selectedImageId);
@@ -423,7 +448,8 @@ export default function App() {
     const img = new Image();
     const logo = new Image();
 
-    img.src = `data:image/png;base64,${activeItem.image}`;
+    img.crossOrigin = "anonymous";
+    img.src = activeItem.image.startsWith('http') ? activeItem.image : `data:image/png;base64,${activeItem.image}`;
     logo.src = `data:image/png;base64,${job.logoImage}`;
 
     await Promise.all([
@@ -535,36 +561,7 @@ export default function App() {
     }, 2000);
   };
 
-  // --- DOWNLOAD HELPER ---
-  const downloadImage = async (imageUrl: string, filename: string) => {
-    try {
-      let href = imageUrl;
-      if (imageUrl.startsWith('http')) {
-        // If external URL (Supabase), fetch as blob to avoid CORS/Browser open-in-tab issues
-        const response = await fetch(imageUrl);
-        const blob = await response.blob();
-        href = URL.createObjectURL(blob);
-      } else if (!imageUrl.startsWith('data:')) {
-        // If raw base64 without prefix
-        href = `data:image/png;base64,${imageUrl}`;
-      }
 
-      const link = document.createElement('a');
-      link.href = href;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      if (imageUrl.startsWith('http')) {
-        // Small delay to ensure browser captures the blob
-        setTimeout(() => URL.revokeObjectURL(href), 1000);
-      }
-    } catch (e) {
-      console.error("Download failed:", e);
-      alert("İndirme başlatılamadı. Görsele sağ tıklayıp 'Farklı Kaydet' diyebilirsiniz.");
-    }
-  };
 
   const loadFromArchive = (item: GeneratedItem) => {
     setJob(p => ({
@@ -854,8 +851,8 @@ export default function App() {
                         {/* Original Image (Fully Visible) */}
                         <img
                           ref={cropImageRef}
-                          src={job.gallery.find(g => g.type === 'standard')?.image.startsWith('http') 
-                            ? job.gallery.find(g => g.type === 'standard')?.image 
+                          src={job.gallery.find(g => g.type === 'standard')?.image.startsWith('http')
+                            ? job.gallery.find(g => g.type === 'standard')?.image
                             : `data:image/png;base64,${job.gallery.find(g => g.type === 'standard')?.image}`
                           }
                           className="max-h-[600px] max-w-full object-contain"
@@ -898,26 +895,25 @@ export default function App() {
                 ) : activeImage ? (
                   // --- STANDARD VIEW (Zoom Enabled) ---
                   <div className="relative group cursor-zoom-in" onMouseMove={handleZoomMove} style={isZooming ? { overflow: 'hidden' } : {}}>
-                     <img
-                       src={activeImage.image.startsWith('http') ? activeImage.image : `data:image/png;base64,${activeImage.image}`}
-                       className={`max-h-full max-w-full object-contain shadow-2xl rounded-lg transition-transform duration-200 ${isZooming ? 'scale-[2]' : 'scale-100'}`}
-                       style={isZooming ? zoomStyle : {}}
-                       onMouseEnter={() => setIsZooming(true)}
-                       onMouseLeave={() => setIsZooming(false)}
-                       alt="Hero Result"
-                     />
-             {/* DEBUG TRACE REMOVED */}
-                      {!isZooming && (
-                        <div className="absolute top-4 right-4 bg-indigo-600/90 text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg backdrop-blur-sm border border-indigo-400/30">
-                          AI ({activeImage.label})
-                        </div>
-                      )}
-                      {!isZooming && (job.generationTime || 0) > 0 && (
-                        <div className="absolute bottom-4 right-4 bg-black/60 text-white text-[10px] font-mono px-2 py-1 rounded backdrop-blur-sm border border-white/10">
-                          ⏱️ {(job.generationTime || 0).toFixed(1)}s
-                        </div>
-                      )}
-                    </div>
+                    <img
+                      src={activeImage.image.startsWith('http') ? activeImage.image : `data:image/png;base64,${activeImage.image}`}
+                      className={`max-h-full max-w-full object-contain shadow-2xl rounded-lg transition-transform duration-200 ${isZooming ? 'scale-[2]' : 'scale-100'}`}
+                      style={isZooming ? zoomStyle : {}}
+                      onMouseEnter={() => setIsZooming(true)}
+                      onMouseLeave={() => setIsZooming(false)}
+                      alt="Hero Result"
+                    />
+                    {/* DEBUG TRACE REMOVED */}
+                    {!isZooming && (
+                      <div className="absolute top-4 right-4 bg-indigo-600/90 text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg backdrop-blur-sm border border-indigo-400/30">
+                        AI ({activeImage.label})
+                      </div>
+                    )}
+                    {!isZooming && (job.generationTime || 0) > 0 && (
+                      <div className="absolute bottom-4 right-4 bg-black/60 text-white text-[10px] font-mono px-2 py-1 rounded backdrop-blur-sm border border-white/10">
+                        ⏱️ {(job.generationTime || 0).toFixed(1)}s
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center text-slate-400">
@@ -936,7 +932,7 @@ export default function App() {
                       onClick={() => setJob(p => ({ ...p, selectedImageId: item.id }))}
                       className={`relative flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all ${job.selectedImageId === item.id ? 'border-indigo-600 ring-2 ring-indigo-200' : 'border-slate-200 opacity-70 hover:opacity-100'}`}
                     >
-                      <img src={`data:image/png;base64,${item.image}`} className="w-full h-full object-cover object-top" />
+                      <img src={item.image.startsWith('http') ? item.image : `data:image/png;base64,${item.image}`} className="w-full h-full object-cover object-top" />
                       <div className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[9px] font-bold p-1 text-center truncate">
                         {item.label}
                         {item.generationTime && <span className="block text-[8px] opacity-80 font-mono">{item.generationTime.toFixed(1)}s</span>}
@@ -1033,8 +1029,8 @@ export default function App() {
               </div>
             </div>
           </div>
-  )
-}
+        )
+        }
       </main >
     </div >
   );

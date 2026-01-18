@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { GoogleGenAI, Type } from "@google/genai";
 
 const createAI = () => new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
@@ -7,6 +8,33 @@ export interface AnalysisResult {
   material: string;
   gemColor: string;
 }
+
+// --- SHARED TYPES ---
+export interface ModelPersona {
+  id: string;
+  name: string;
+  image: string;
+  category: string;
+  description: string;
+}
+
+export interface JewelryProduct {
+  id: string;
+  name: string;
+  image: string;
+}
+
+export type JobStatusKey = 'idle' | 'queued' | 'processing' | 'analyzing' | 'generating' | 'complete' | 'failed';
+
+export const JOB_STATUS_MESSAGES: Record<JobStatusKey, string> = {
+  idle: "Hazır",
+  queued: "Sıraya alındı...",
+  processing: "Yapay zeka çalışıyor...",
+  analyzing: "Ürün analiz ediliyor...",
+  generating: "Görseller üretiliyor...",
+  complete: "Tamamlandı!",
+  failed: "Hata oluştu."
+};
 
 // 1. AURA DEFINITIONS (Lighting Removed - Now Dynamic)
 const AURA_STYLES = {
@@ -43,6 +71,7 @@ export const analyzeJewelry = async (productImagesBase64: string[], category: st
       model,
       contents: [{ role: 'user', parts }],
       generationConfig: {
+        // @ts-ignore
         responseMimeType: 'application/json',
       }
     });
@@ -60,6 +89,12 @@ export const analyzeJewelry = async (productImagesBase64: string[], category: st
       gemColor: "None"
     };
   }
+};
+
+export const ANALYSIS_FALLBACK: AnalysisResult = {
+  scenePrompt: "Clean luxury studio background, high-end photography",
+  material: "Gold",
+  gemColor: "None"
 };
 
 // 2. DYNAMIC POSING & NEGATIVE CONSTRAINTS
@@ -431,6 +466,7 @@ export const generateLifestyleImage = async (
     model,
     contents: [{ role: 'user', parts }],
     generationConfig: {
+      // @ts-ignore
       imageConfig: {
         aspectRatio: technicalSettings.aspectRatio,
         imageSize: '2K'
@@ -443,7 +479,7 @@ export const generateLifestyleImage = async (
 
   for (const part of responseParts) {
     if (part.inlineData) {
-      return { image: part.inlineData.data, error: null };
+      return { image: part.inlineData.data ?? null, error: null };
     }
   }
 
