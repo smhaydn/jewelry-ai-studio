@@ -341,54 +341,11 @@ export const generateLifestyleImage = async (
   const ai = createAI();
   const model = 'gemini-3-pro-image-preview';
 
-  // Temporary logging to verify data flow
   console.log("📸 Shoot Mode:", shootMode || 'lifestyle (default)');
 
-  const auraPrompt = AURA_STYLES[variationMode];
-  const poseInstruction = getPoseInstruction(category, variationMode, stylePreset);
-  const lightingInstruction = getLightingInstruction(variationMode, stylePreset);
-  const stylingInstruction = getStylingInstruction(detectedMaterial?.gemColor); // NEW: Dynamic Styling
-
-  // STRICT FIDELITY INSTRUCTIONS
-  let fidelityInstruction = "";
-
-  // MATERIAL ENFORCEMENT
-  let materialConstraint = "";
-  if (detectedMaterial) {
-    materialConstraint = `
-    *** COLOR & MATERIAL ENFORCEMENT ***
-    - The jewelry metal is: ${detectedMaterial.material.toUpperCase()}.
-    - The gem color is: ${detectedMaterial.gemColor.toUpperCase()}.
-    - DO NOT CHANGE THESE COLORS. If it is Silver, DO NOT make it Gold.
-    `;
-  }
-
-  if (variationMode === 'standard') {
-    fidelityInstruction = `
-    *** PIXEL-PERFECT PRODUCT FIDELITY: SACRED GEOMETRY LOCK ***
-    - The SOURCE images are the ONLY truth. 
-    - You MUST use the exact design, stone layout, and metal structure provided.
-    - DO NOT add extra stones. DO NOT change the metal thickness.
-    - DO NOT redesign the prong settings or the band.
-    - Think of this as a composite/placement task, not a generative one.
-    ${materialConstraint}
-    `;
-  } else {
-    fidelityInstruction = `
-    - *** STRICT GEOMETRY & SCALE LOCK ***: You are FORBIDDEN from enlarging the jewelry. 
-    - MAINTAIN THE RATIO: Look at the size of the jewelry relative to the background/original props in the source image. REPLICATE THAT EXACT RATIO on the human model.
-    - If the jewelry looks small in the source, it MUST look small on the model.
-    ${materialConstraint}
-    - Aesthetic mood is secondary to MILLIMETRIC SCALE ACCURACY. The product is FINE JEWELRY, not costume jewelry.
-    `;
-  }
-
-  // Explicit Subject Line (Lower weight to model in standard mode)
-  const subjectLine = variationMode === 'standard'
-    ? `SUBJECT: High-end technical catalog shot of a ${category}.`
-    : `SUBJECT: Professional model wearing a ${category}.`;
-
-  // MODEL INJECTION (Restored Legacy Logic)
+  // ========================================
+  // IDENTITY LOCK (PRESERVED IN BOTH MODES)
+  // ========================================
   let modelIdentityPrompt = "";
   if (modelReferenceBase64) {
     modelIdentityPrompt = `
@@ -423,60 +380,180 @@ export const generateLifestyleImage = async (
     `;
   }
 
-  let fullPrompt = `
+  let fullPrompt = "";
+
+  // ========================================
+  // MODE 1: CATALOG (STERILE E-COMMERCE)
+  // ========================================
+  if (shootMode === 'catalog') {
+    fullPrompt = `
     ${modelIdentityPrompt}
-    ${subjectLine}
 
-  AESTHETIC & ATMOSPHERE(THE AURA):
-    ${auraPrompt}
-
-  LIGHTING & MOOD:
-    ${lightingInstruction}
-
-  POSING & COMPOSITION(THE ANATOMY):
-    ${poseInstruction}
-
-  FASHION & STYLING(THE LOOK):
-    ${stylingInstruction}
-
-  ENVIRONMENT: ${stylePreset}
+    *** CATALOG MODE: STERILE E-COMMERCE PHOTOGRAPHY ***
     
-    ${fidelityInstruction}
-
-    REALISTIC SIZE & SCALE(MANDATORY & CRITICAL):
-    - *** RATIO LOCK PROTOCOL: REPLICATE THE PRODUCT - TO - BODY RATIO FROM SOURCE. ***
-    - PREVENT "AI BLOAT": AI models tend to enlarge jewelry for visibility.YOU MUST RESIST THIS.
-    - ** IF IN DOUBT, MAKE THE JEWELRY SMALLER. **
-    - FINE JEWELRY STANDARDS: Metal is thin, elegant, and precise. 
-    - RING: Band width approx 1.2mm.Stone length max 10mm.DO NOT MAKE IT LOOK LIKE COSTUME JEWELRY.
-    - NECKLACE: Chain width approx 0.8mm(Invisible Thread).Pendants are OFTEN SMALL(1cm - 2cm). 
-    - EARRING: Earring height approx 5mm - 15mm(studs / small drops).
-    - Camera must be far enough back to show the jewelry in its true, delicate context.
-
-    HYPER - REALISM & ANATOMY(THE "HUMAN PERFECTION" STANDARD):
-    - ** ANATOMY PRIORITY: WORLD - CLASS PARTS MODEL STANDARD. **
-    - HANDS: Slender, elegant, soft knuckles.NO distorted fingers.NO veins.
-    - EARS: Small, tucked, perfect helix structure.
-    - NECK: Swan - like, long, smooth.
-    - CHEST / DECOLLETAGE: Smooth skin, perfect bone structure(clavicles).
+    SUBJECT: High-end technical product photography of a ${category}.
     
-    - SKIN TEXTURE(NOT PLASTIC):
-  - The goal is "High-End Magazine Retouch", NOT "Computer Generated".
-    - Visible pores ? YES.
-    - Real skin texture ? YES.
-    - Plastic smoothness ? NO.
-    - ** REFERENCE FIDELITY: The reference model is already perfect. DO NOT "FIX" HER. Just copy her exact skin reality. **
-    - ** IDENTITY-SAFE ANATOMY: Improve skin quality BUT DO NOT ALTER BONE STRUCTURE or FACIAL FEATURES. **
-
-    *** SENSITIVE IDENTITY CHECK(SANDWICH LOCK) ***
-    - FINAL VERIFICATION: DOES THE FACE LOOK LIKE THE SISTER OF THE REFERENCE ?
-      - IT MUST BE THE * SAME PERSON *.
-    - If the reference has freckles, the output MUST have freckles.
-    - If the reference has a specific nose shape, the output MUST match.
-    - IGNORE "BEAUTY FILTERS".WE WANT THE REAL FACE.
-    - KEEP THE IDENTITY 100 % LOCKED.
-    *** END IDENTITY LOCK ***
+    CAMERA SETTINGS:
+    - Shot on Sony A7R IV, 100mm Macro Lens
+    - Aperture: f/16 (Everything in sharp focus, no bokeh)
+    - ISO: 100 (Clean, noise-free)
+    - Shutter: 1/125s (Studio sync)
+    
+    LIGHTING:
+    - Studio Softbox Lighting (3-point setup)
+    - Evenly lit, no harsh shadows
+    - Color temperature: 5500K (Neutral daylight)
+    - Fill light to eliminate all shadows
+    
+    BACKGROUND:
+    - ${baseScenePrompt}
+    - STRICT: If "Pure White", background must be #FFFFFF with no texture
+    - STRICT: If "Studio Grey", background must be neutral grey #C0C0C0
+    - STRICT: If "Luxury Black", background must be pure black #000000
+    - NO props, NO distracting elements
+    
+    MODEL DIRECTION:
+    - Professional hand/body model posing
+    - Perfect, controlled positioning
+    - NO emotional expression
+    - Hair perfectly styled and controlled
+    - Makeup: Minimal, natural, professional
+    - Nails: Clean, manicured, neutral polish
+    
+    COMPOSITION:
+    - Product is the ABSOLUTE hero
+    - Model is a display mannequin (hands/neck only)
+    - Centered, symmetrical framing
+    - Clean, uncluttered
+    
+    VIBE:
+    - Sterile, Clinical, High-End E-Commerce
+    - Net-A-Porter / Farfetch catalog style
+    - Perfectionist, controlled, technical
+    
+    NEGATIVE PROMPT (STRICTLY FORBIDDEN):
+    - NO blurry background
+    - NO messy hair
+    - NO emotional expression
+    - NO props or lifestyle elements
+    - NO candid moments
+    - NO natural imperfections
+    - NO bokeh or shallow depth of field
+    
+    PRODUCT FIDELITY:
+    - The product images are SACRED. Do not alter the design.
+    - Maintain exact proportions and scale
+    - ${category} should look delicate and fine, not oversized
+    - Metal thickness and stone size must match reference exactly
+    
+    *** END CATALOG MODE ***
     `;
+  }
+  // ========================================
+  // MODE 2: LIFESTYLE (CANDID INFLUENCER)
+  // ========================================
+  else {
+    // Lifestyle scenario mapping
+    let scenarioPrompt = "";
+    const presetLower = stylePreset.toLowerCase();
+
+    if (presetLower.includes('lazy') || presetLower.includes('sunday') || presetLower.includes('bed')) {
+      scenarioPrompt = "Lying in bed with messy sheets, hair in a loose bun, holding a coffee mug, scrolling on phone. Casual, just-woke-up energy.";
+    } else if (presetLower.includes('kitchen') || presetLower.includes('mess')) {
+      scenarioPrompt = "In a messy kitchen, flour on counter, eating a croissant, laughing. Authentic home moment.";
+    } else if (presetLower.includes('car') || presetLower.includes('interior')) {
+      scenarioPrompt = "Selfie angle inside a luxury car, sunlight streaming through window, hand on steering wheel. Travel vibe.";
+    } else if (presetLower.includes('mirror') || presetLower.includes('selfie') || presetLower.includes('getting ready')) {
+      scenarioPrompt = "Taking a photo in a mirror, phone visible in hand, flash firing. Getting-ready aesthetic.";
+    } else if (presetLower.includes('street') || presetLower.includes('urban')) {
+      scenarioPrompt = "Walking on city street, caught mid-stride, looking back at camera. Street style energy.";
+    } else if (presetLower.includes('cafe') || presetLower.includes('coffee')) {
+      scenarioPrompt = "Sitting at cafe table, holding coffee cup, blurred street background. Casual luxury.";
+    } else if (presetLower.includes('pool') || presetLower.includes('vacation')) {
+      scenarioPrompt = "Lounging by pool, wet hair, sunglasses, summer vacation vibe.";
+    } else {
+      scenarioPrompt = "Candid lifestyle moment, natural and authentic.";
+    }
+
+    fullPrompt = `
+    ${modelIdentityPrompt}
+
+    *** LIFESTYLE MODE: CANDID INFLUENCER AESTHETIC ***
+    
+    SUBJECT: Authentic lifestyle moment featuring a ${category}.
+    
+    CAMERA SETTINGS:
+    - Shot on iPhone 15 Pro Max (Portrait Mode, Flash ON) OR 35mm Film Camera (Kodak Portra 400)
+    - Aperture: f/1.8 or f/2.0 (Shallow depth of field, blurry background)
+    - Natural grain and slight imperfections welcome
+    - Paparazzi-style direct flash acceptable
+    
+    LIGHTING:
+    - Natural window light, Golden Hour, OR Direct Camera Flash
+    - Uncontrolled, authentic lighting
+    - Shadows and highlights are natural and imperfect
+    - Warm, flattering tones
+    
+    SCENARIO:
+    ${scenarioPrompt}
+    
+    ENVIRONMENT:
+    - ${baseScenePrompt}
+    - Messy, lived-in, authentic
+    - Props and context elements encouraged
+    - Blurred background (bokeh)
+    
+    MODEL DIRECTION (CRITICAL):
+    - The model is NOT posing perfectly
+    - She is caught in a candid moment
+    - Hair should be slightly messy/natural (NOT perfectly styled)
+    - Expression: Natural, authentic, maybe laughing or looking away
+    - Body language: Relaxed, not stiff
+    - This is NOT a professional photoshoot - it's a real moment
+    
+    SKIN & TEXTURE:
+    - Visible skin texture (pores, slight imperfections)
+    - NO plastic smoothness
+    - NO heavy retouching
+    - Real human skin with natural texture
+    - Freckles, moles, texture marks MUST be visible if present
+    
+    STYLING:
+    - Casual, effortless
+    - "Old Money" or "Influencer" aesthetic
+    - Minimal makeup or natural makeup
+    - Nails: Can be natural or trendy (not necessarily perfect)
+    - Clothing: Casual luxury (silk robe, oversized sweater, etc.)
+    
+    VIBE:
+    - Candid, Authentic, Imperfect
+    - "Caught in the moment"
+    - Influencer aesthetic (Sofia Richie, Hailey Bieber style)
+    - Messy but chic
+    - NOT staged, NOT perfect
+    
+    COMPOSITION:
+    - Product is visible but NOT the only focus
+    - Context and lifestyle matter
+    - Asymmetrical, natural framing
+    - Bokeh background
+    
+    NEGATIVE PROMPT (STRICTLY FORBIDDEN):
+    - NO perfect studio lighting
+    - NO stiff, professional posing
+    - NO perfectly styled hair
+    - NO sterile backgrounds
+    - NO catalog-style perfection
+    
+    PRODUCT FIDELITY:
+    - The product images are SACRED. Do not alter the design.
+    - Maintain exact proportions and scale
+    - ${category} should look delicate and fine, not oversized
+    - Metal thickness and stone size must match reference exactly
+    
+    *** END LIFESTYLE MODE ***
+    `;
+  }
 
   const parts: any[] = [{ text: fullPrompt }];
 
