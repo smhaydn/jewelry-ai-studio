@@ -386,18 +386,24 @@ export const generateLifestyleImage = async (
   let modelIdentityPrompt = "";
   if (modelReferenceBase64) {
     modelIdentityPrompt = `
-    *** CRITICAL: DEEPFAKE-LEVEL FACE IDENTITY LOCK ***
-    - The LAST image provided is the REFERENCE MODEL (Target Person).
-    - PRIORITY #1: YOU MUST CLONE THIS PERSON'S FACE EXACTLY.
-    - PRESERVE: 
-      1. EYE SHAPE & COLOR
-      2. NOSE SHAPE
-      3. LIP SHAPE & VOLUME
-      4. SKIN TEXTURE (Freckles, moles, scars MUST be visible)
-      5. HAIR COLOR & STYLE (Do not change dark hair to blonde)
-    - FAILURE CONDITION: If the face looks like a generic AI model, you fail.
-    - ATTENTION: If the style preset suggests lighting that would wash out features, IGNORE THE LIGHTING. The face must remain recognizable.
-    *** END IDENTITY LOCK ***
+    *** CRITICAL: FORENSIC BIOMETRIC FACE CLONING ***
+    - TASK: Biyometric Yüz Kopyalama (Forensic Facial Reconstruction).
+    - INPUT: The LAST image is the TARGET IDENTITY.
+    - STRICT COMMAND: YOU MUST CLONE THE EXACT FACE FROM THE INPUT IMAGE.
+    - BIOMETRIC ANCHORS (DO NOT CHANGE):
+      1. CRANIAL STRUCTURE: Copy the exact head shape and jawline width.
+      2. NASAL BRIDGE: Maintain the exact nose shape, width, and hump (if any).
+      3. EYE DISTANCE: Maintain the exact Inter-pupillary distance.
+      4. SKIN IMPERFECTIONS: If the reference has moles, scars, or texture, KEEP THEM.
+    - NEGATIVE CONSTRAINTS:
+      - DO NOT "Beautify". DO NOT "Instagram Filter". DO NOT "Westernize" or "Standardize" features.
+      - DO NOT CHANGE EYEBROW SHAPE.
+      - DO NOT CHANGE HAIRLINE.
+    - LIGHTING OVERRIDE:
+      - Even if the scene is "Dim/Dark", the FACE MUST BE LIT ENOUGH TO SHOW IDENTITY.
+      - PRIORITY: IDENTITY > AESTHETICS.
+    *** END FORENSIC LOCK ***
+    
     
     `;
   }
