@@ -386,9 +386,78 @@ export const generateLifestyleImage = async (
   // MODE 1: CATALOG (STERILE E-COMMERCE)
   // ========================================
   if (shootMode === 'catalog') {
+    // ========================================
+    // COMPOSITIONAL ENGINEERING: FRAMING RULES
+    // ========================================
+    let framingInstruction = "";
+    let poseAnchor = "";
+    let visualShrinkingKeywords = "";
+    const categoryLower = category.toLowerCase();
+
+    if (categoryLower.includes('ring') || categoryLower.includes('yüzük')) {
+      framingInstruction = `
+      *** FRAMING CONSTRAINT: MEDIUM SHOT (WAIST-UP) ***
+      - MANDATORY: SHOW THE WHOLE HAND AND WRIST.
+      - MANDATORY: SHOW THE TORSO (waist to shoulders).
+      - FORBIDDEN: Do NOT use Macro lens. Do NOT do an extreme close-up of the finger.
+      - FORBIDDEN: Do NOT crop at the wrist. The entire hand must be visible.
+      - CAMERA DISTANCE: At least 1.5 meters away from the subject.
+      `;
+      poseAnchor = `
+      - POSE ANCHOR: Model's hand is resting near her face, on her shoulder, or touching her collarbone.
+      - This provides a FACE-TO-HAND size comparison, forcing correct scale.
+      `;
+      visualShrinkingKeywords = "dainty, fitted, realistic size, snug fit";
+    } else if (categoryLower.includes('earring') || categoryLower.includes('küpe')) {
+      framingInstruction = `
+      *** FRAMING CONSTRAINT: PORTRAIT SHOT (HEAD AND SHOULDERS) ***
+      - MANDATORY: SHOW NECK AND SHOULDER.
+      - MANDATORY: SHOW THE ENTIRE HEAD (not just ear).
+      - FORBIDDEN: Do NOT do an extreme close-up of the ear only.
+      - CAMERA DISTANCE: At least 1 meter away from the subject.
+      `;
+      poseAnchor = `
+      - POSE ANCHOR: Model is slightly turning her head, showing the earring in profile.
+      - The face provides scale reference for the ear and earring.
+      `;
+      visualShrinkingKeywords = "delicate, subtle, small";
+    } else if (categoryLower.includes('necklace') || categoryLower.includes('kolye')) {
+      framingInstruction = `
+      *** FRAMING CONSTRAINT: BUST SHOT (CHEST UP) ***
+      - MANDATORY: SHOW SHOULDERS AND UPPER CHEST.
+      - MANDATORY: SHOW THE FACE (at least from nose up).
+      - FORBIDDEN: Do NOT crop at the neck.
+      - CAMERA DISTANCE: At least 1 meter away from the subject.
+      `;
+      poseAnchor = `
+      - POSE ANCHOR: Model is facing forward or slightly turned, showing the necklace resting on the collarbone.
+      - The face and shoulders provide scale reference.
+      `;
+      visualShrinkingKeywords = "delicate, fine, elegant";
+    } else if (categoryLower.includes('bracelet') || categoryLower.includes('bileklik')) {
+      framingInstruction = `
+      *** FRAMING CONSTRAINT: MEDIUM SHOT (WAIST-UP) ***
+      - MANDATORY: SHOW THE ENTIRE ARM (from shoulder to hand).
+      - FORBIDDEN: Do NOT crop at the elbow or wrist.
+      - CAMERA DISTANCE: At least 1.5 meters away from the subject.
+      `;
+      poseAnchor = `
+      - POSE ANCHOR: Model's arm is extended or resting naturally, showing the bracelet in context.
+      `;
+      visualShrinkingKeywords = "slim, fitted, delicate";
+    } else {
+      // Default framing for other categories
+      framingInstruction = `
+      *** FRAMING CONSTRAINT: MEDIUM SHOT ***
+      - SHOW THE PRODUCT IN CONTEXT WITH THE BODY.
+      - DO NOT use extreme close-ups.
+      `;
+      poseAnchor = "";
+      visualShrinkingKeywords = "realistic size, proportional";
+    }
+
     // Category-specific scale instructions
     let categoryScalePrompt = "";
-    const categoryLower = category.toLowerCase();
 
     if (categoryLower.includes('ring') || categoryLower.includes('yüzük')) {
       categoryScalePrompt = `
@@ -427,7 +496,10 @@ export const generateLifestyleImage = async (
 
     *** CATALOG MODE: STERILE E-COMMERCE PHOTOGRAPHY ***
     
-    SUBJECT: High-end technical product photography of a ${category}.
+    ${framingInstruction}
+    
+    SUBJECT: A photo of a professional model. She is wearing a ${visualShrinkingKeywords} ${category}.
+    ${poseAnchor}
     
     CAMERA SETTINGS:
     - Shot on Sony A7R IV, 85mm Lens (NOT 100mm Macro)
