@@ -875,6 +875,10 @@ export default function App() {
                        onMouseLeave={() => setIsZooming(false)}
                        alt="Hero Result"
                      />
+             {/* DEBUG: Show URL to identify broken link source */}
+             <div className="absolute bottom-0 left-0 bg-black text-white text-[10px] p-1 opacity-50">
+               DEBUG URL: {activeImage.image.substring(0, 50)}...
+             </div>
                       {!isZooming && (
                         <div className="absolute top-4 right-4 bg-indigo-600/90 text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg backdrop-blur-sm border border-indigo-400/30">
                           AI ({activeImage.label})
