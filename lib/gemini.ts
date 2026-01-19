@@ -334,7 +334,8 @@ export const generateLifestyleImage = async (
   },
   modelReferenceBase64?: string | null,
   modelPhysicalDescription?: string,
-  shootMode?: 'catalog' | 'lifestyle', // NEW: Photography mode
+  wornReferenceBase64?: string | null, // NEW: Worn photo for scale reference
+  shootMode?: 'catalog' | 'lifestyle',
   variationMode: 'standard' | 'playful' | 'artistic' = 'artistic',
   detectedMaterial?: { material: string, gemColor: string }
 ): Promise<{ image: string | null; error: string | null }> => {
@@ -377,6 +378,34 @@ export const generateLifestyleImage = async (
     - "${modelPhysicalDescription}"
     - If the image differs from this text, PRIORITIZE THIS TEXT for hair color/style and eye color.
     *** END TEXT ANCHOR ***
+    `;
+  }
+
+  // ========================================
+  // SCALE REFERENCE (WORN PHOTO)
+  // ========================================
+  let scaleReferencePrompt = "";
+  if (wornReferenceBase64) {
+    scaleReferencePrompt = `
+    *** SCALE REFERENCE (CRITICAL - HIGHEST PRIORITY) ***
+    
+    IMPORTANT: One of the reference images shows the product WORN on a real person.
+    This is your ABSOLUTE SCALE ANCHOR.
+    
+    MANDATORY RULES:
+    1. Identify which image shows the product worn (on hand/neck/ear/wrist).
+    2. Measure the product-to-body ratio in that worn reference image.
+    3. In your generated image, the product MUST be the EXACT SAME SIZE relative to the model's body.
+    4. DO NOT make the product larger or smaller than shown in the worn reference.
+    5. Copy the size ratio 1:1 from the worn reference.
+    
+    VERIFICATION:
+    - Compare: "Is the product the same size relative to the body part as in the worn reference?"
+    - If the product looks bigger or smaller, ADJUST IT to match the worn reference exactly.
+    
+    PRIORITY: This scale reference overrides all other size instructions.
+    
+    *** END SCALE REFERENCE ***
     `;
   }
 
@@ -524,6 +553,8 @@ export const generateLifestyleImage = async (
     }
 
     fullPrompt = `
+    ${scaleReferencePrompt}
+    
     ${modelIdentityPrompt}
 
     *** CATALOG MODE: STERILE E-COMMERCE PHOTOGRAPHY ***
@@ -636,6 +667,8 @@ export const generateLifestyleImage = async (
     }
 
     fullPrompt = `
+    ${scaleReferencePrompt}
+    
     ${modelIdentityPrompt}
 
     *** LIFESTYLE MODE: CANDID INFLUENCER AESTHETIC ***
@@ -725,6 +758,11 @@ export const generateLifestyleImage = async (
   // MODEL REFERENCE (Still appended as image, but prompt is now top priority)
   if (modelReferenceBase64) {
     parts.push({ inlineData: { mimeType: 'image/jpeg', data: modelReferenceBase64 } });
+  }
+
+  // WORN REFERENCE (Scale anchor)
+  if (wornReferenceBase64) {
+    parts.push({ inlineData: { mimeType: 'image/jpeg', data: wornReferenceBase64 } });
   }
 
   const request: any = {

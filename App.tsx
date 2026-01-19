@@ -101,6 +101,7 @@ interface JobState {
   aspectRatio: string;
   logoImage: string | null;
   showBranding: boolean;
+  wornReferenceImage: string | null; // NEW: Worn photo for scale reference
   generatedVideo: string | null; // URL for generated video
   isVideoGenerating: boolean;
   selectedImageId: string | null; // ID of the currently selected main image
@@ -189,6 +190,7 @@ export default function App() {
     aspectRatio: '1:1',
     logoImage: null,
     showBranding: false,
+    wornReferenceImage: null, // NEW: Initialize as null
     generatedVideo: null,
     isVideoGenerating: false,
     selectedImageId: null,
@@ -260,6 +262,13 @@ export default function App() {
       const files = Array.from(e.target.files).slice(0, 3);
       const base64s = await Promise.all(files.map(fileToBase64));
       setJob(prev => ({ ...prev, productImages: base64s, error: null }));
+    }
+  };
+
+  const handleWornReferenceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const base64 = await fileToBase64(e.target.files[0]);
+      setJob(prev => ({ ...prev, wornReferenceImage: base64 }));
     }
   };
 
@@ -352,7 +361,8 @@ export default function App() {
         },
         selectedModel.image,
         selectedModel.physicalDescription,
-        shootMode // NEW: Pass shootMode parameter
+        job.wornReferenceImage, // NEW: Pass worn reference for scale
+        shootMode
       );
 
       if (result.error) throw new Error(result.error);
@@ -789,6 +799,51 @@ export default function App() {
                   </div>
                   <input type="file" multiple className="hidden" onChange={handleProductUpload} />
                 </label>
+              </div>
+
+              {/* Worn Reference Upload */}
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <h3 className="font-bold text-slate-900 mb-2 flex items-center gap-2 text-sm">
+                  <EyeIcon className="h-4 w-4 text-purple-600" />
+                  Giyilmiş Referans (Opsiyonel)
+                </h3>
+                <p className="text-[10px] text-slate-500 mb-3">Ürünün gerçek ölçekte giyilmiş fotoğrafı - AI için ölçek referansı</p>
+
+                <label className="block w-full h-20 border-2 border-dashed border-purple-200 rounded-lg flex items-center justify-center cursor-pointer hover:bg-purple-50 transition-colors">
+                  <div className="text-center">
+                    {job.wornReferenceImage ? (
+                      <CheckCircleIcon className="h-6 w-6 text-purple-500 mx-auto" />
+                    ) : (
+                      <PhotoIcon className="h-6 w-6 text-purple-300 mx-auto" />
+                    )}
+                    <span className="text-xs text-slate-500 mt-1 block">
+                      {job.wornReferenceImage ? 'Referans Yüklendi ✓' : 'Giyilmiş Foto Yükle'}
+                    </span>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleWornReferenceUpload}
+                  />
+                </label>
+
+                {job.wornReferenceImage && (
+                  <div className="mt-2 relative">
+                    <img
+                      src={`data:image/jpeg;base64,${job.wornReferenceImage}`}
+                      className="w-full h-32 object-cover rounded-lg border border-purple-200"
+                      alt="Worn Reference"
+                    />
+                    <button
+                      onClick={() => setJob(p => ({ ...p, wornReferenceImage: null }))}
+                      className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+                      title="Sil"
+                    >
+                      <XMarkIcon className="h-3 w-3" />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
