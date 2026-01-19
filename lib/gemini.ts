@@ -101,25 +101,25 @@ export interface ProductScaleResult {
 
 const SCALE_RULES: Record<string, { [key: string]: string }> = {
   "Ring": {
-    "1-3": "EXTREMELY DELICATE & THIN. Ring band width must be < 15% of the finger's phalanx height. Stone should be small and subtle.",
-    "4-7": "STANDARD FIT. Classic proportions. Ring band width approx 25-30% of phalanx. Balanced look.",
-    "8-10": "STATEMENT / COCKTAIL RING. Oversized. Can cover 60-80% of the finger phalanx. Bold and heavy look."
+    "1-3": "EXTREMELY DELICATE. Width max 2mm. Must look fragile and thin.",
+    "4-7": "STANDARD RING. Width max 6mm. Perfectly balanced usage of finger space.",
+    "8-10": "BOLD / COCKTAIL. Max width 15mm. STRICT CONSTRAINT: Must NOT exceed the knuckle joint. Must NOT look like a glove or armor."
   },
   "Necklace": {
-    "1-3": "DAINTY CHAIN. Very thin, barely visible chain. Pendant is small (< 1cm).",
-    "4-7": "STANDARD PENDANT. Visible chain thickness. Pendant is the focal point (approx 2-3cm).",
-    "8-10": "CHUNKY NECKLACE / STATEMENT PIECE. Thick chain or large beads. Covers significant chest area."
+    "1-3": "INVISIBLE THREAD. Chain < 1mm. Pendant < 10mm. Very subtle.",
+    "4-7": "VISIBLE GOLD. Chain 2-3mm. Pendant approx 20mm. Nice presence.",
+    "8-10": "RUNWAY PIECE. Chain can be thick. Pendant max 50mm. Do not cover the entire chest."
   },
   "Earrings": {
-    "1-3": "SMALL STUDS / MINI HOOPS. Must not extend beyond the earlobe.",
-    "4-7": "STANDARD DROP / DANGLE. Extends 2-4cm below the earlobe.",
-    "8-10": "STATEMENT / CHANDELIER EARRINGS. Large, heavy look. Extends 5cm+ or covers the neck area."
+    "1-3": "TINY STUD. Max 8mm. Stops at earlobe.",
+    "4-7": "ELEGANT DROP. Length max 40mm. Does not touch shoulder.",
+    "8-10": "SHOULDER DUSTER. Length max 80mm. Heavy visual weight but realistic gravity."
   },
   // Default fallback for other categories
   "default": {
-    "1-3": "MINIMALIST & DELICATE. Very thin and fine details.",
-    "4-7": "STANDARD PROPORTIONS. Balanced visual weight.",
-    "8-10": "OVERSIZED / BOLD STATEMENT. Heavy visual weight."
+    "1-3": "MINIMALIST. Keep it small and precise.",
+    "4-7": "STANDARD. Balanced visual weight.",
+    "8-10": "BOLD. Strong presence but REALISTIC PHYSICS."
   }
 };
 
