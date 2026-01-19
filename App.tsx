@@ -26,7 +26,7 @@ import {
   VideoCameraIcon,
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
-import { generateLifestyleImage, analyzeJewelry, generateJewelryVideo, AnalysisResult, JewelryProduct, ModelPersona, JOB_STATUS_MESSAGES, JobStatusKey, ANALYSIS_FALLBACK } from './lib/gemini';
+import { generateLifestyleImage, analyzeJewelry, generateJewelryVideo, analyzeProductVisuals, ProductScaleResult, AnalysisResult, JewelryProduct, ModelPersona, JOB_STATUS_MESSAGES, JobStatusKey, ANALYSIS_FALLBACK } from './lib/gemini';
 import { createClient } from '@supabase/supabase-js';
 
 // --- CONFIGURATION ---
@@ -338,13 +338,20 @@ export default function App() {
       const selectedModel = models.find(m => m.id === job.selectedModelId);
       if (!selectedModel) throw new Error("Manken seçilmedi.");
 
-      // 1. ANALYZE PRODUCT
-      setJob(p => ({ ...p, debugLog: [...p.debugLog, "Ürün analizi yapılıyor..."] }));
+      // 1. ANALYZE PRODUCT SCALE (New Smart Layer)
+      setJob(p => ({ ...p, debugLog: [...p.debugLog, "Ürün boyutları analiz ediliyor..."] }));
 
-      // Removed actual analysis call to simplify for this fix, assuming logic exists in gemini.ts
-      // In a real scenario, we call await analyzeJewelry(job.productImages[0]);
-      // For now, we mock a safe result or call the real function if imported.
-      // Assuming generateLifestyleImage handles analysis internally or we skip it for now.
+      let scaleAnalysis: ProductScaleResult | null = null;
+      // Only run analysis if no strict worn reference is provided (Worn reference is superior)
+      if (job.productImages.length > 0 && job.wornReferenceImages.length === 0) {
+        try {
+          scaleAnalysis = await analyzeProductVisuals(job.productImages[0], job.category);
+          console.log("📏 Smart Scale Analysis:", scaleAnalysis);
+          setJob(p => ({ ...p, debugLog: [...p.debugLog, `Analiz: ${scaleAnalysis?.style} (Skor: ${scaleAnalysis?.score})`] }));
+        } catch (err) {
+          console.warn("Analysis skipped:", err);
+        }
+      }
 
       setJob(p => ({ ...p, status: 'generating' }));
 
@@ -363,8 +370,11 @@ export default function App() {
         },
         selectedModel.image,
         selectedModel.physicalDescription,
-        job.wornReferenceImages, // UPDATED: Pass array instead of single image
-        shootMode
+        job.wornReferenceImages,
+        shootMode,
+        'artistic', // Variation Mode (default)
+        undefined,  // Detected Material (optional)
+        scaleAnalysis // NEW: Pass the analysis result
       );
 
       if (result.error) throw new Error(result.error);

@@ -92,6 +92,76 @@ export const analyzeJewelry = async (productImagesBase64: string[], category: st
   }
 };
 
+// --- NEW: SMART SCALE ANALYSIS ---
+export interface ProductScaleResult {
+  score: number; // 1-10 (1=Delicate, 10=Oversized)
+  style: string;
+  reasoning: string;
+}
+
+const SCALE_RULES: Record<string, { [key: string]: string }> = {
+  "Ring": {
+    "1-3": "EXTREMELY DELICATE & THIN. Ring band width must be < 15% of the finger's phalanx height. Stone should be small and subtle.",
+    "4-7": "STANDARD FIT. Classic proportions. Ring band width approx 25-30% of phalanx. Balanced look.",
+    "8-10": "STATEMENT / COCKTAIL RING. Oversized. Can cover 60-80% of the finger phalanx. Bold and heavy look."
+  },
+  "Necklace": {
+    "1-3": "DAINTY CHAIN. Very thin, barely visible chain. Pendant is small (< 1cm).",
+    "4-7": "STANDARD PENDANT. Visible chain thickness. Pendant is the focal point (approx 2-3cm).",
+    "8-10": "CHUNKY NECKLACE / STATEMENT PIECE. Thick chain or large beads. Covers significant chest area."
+  },
+  "Earrings": {
+    "1-3": "SMALL STUDS / MINI HOOPS. Must not extend beyond the earlobe.",
+    "4-7": "STANDARD DROP / DANGLE. Extends 2-4cm below the earlobe.",
+    "8-10": "STATEMENT / CHANDELIER EARRINGS. Large, heavy look. Extends 5cm+ or covers the neck area."
+  },
+  // Default fallback for other categories
+  "default": {
+    "1-3": "MINIMALIST & DELICATE. Very thin and fine details.",
+    "4-7": "STANDARD PROPORTIONS. Balanced visual weight.",
+    "8-10": "OVERSIZED / BOLD STATEMENT. Heavy visual weight."
+  }
+};
+
+export const analyzeProductVisuals = async (productImageBase64: string, category: string): Promise<ProductScaleResult> => {
+  const ai = createAI();
+  const model = 'gemini-1.5-flash';
+
+  const prompt = `
+    Analyze the visual weight and scale of this ${category}.
+    On a scale of 1 to 10, how "bulky" or "large" is this specific jewelry piece?
+    
+    1 = Extremely delicate, thin, minimal (e.g. thin wire ring, tiny stud)
+    5 = Standard, classic proportions
+    10 = Massive, chunky, oversized, statement piece (e.g. huge cocktail ring, thick chain)
+
+    Return JSON strictly:
+    {
+      "score": number,
+      "style": "one word (e.g. Minimalist, Chunky, Standard)",
+      "reasoning": "short explanation"
+    }
+  `;
+
+  try {
+    const config: any = {
+      model,
+      contents: [{ role: 'user', parts: [{ text: prompt }, { inlineData: { mimeType: 'image/jpeg', data: productImageBase64 } }] }],
+      generationConfig: { responseMimeType: 'application/json' }
+    };
+
+    const result = await ai.models.generateContent(config);
+    const text = (result as any).text ? (result as any).text() : (result as any).response?.text();
+    if (!text) throw new Error("No scale analysis generated");
+
+    return JSON.parse(text) as ProductScaleResult;
+
+  } catch (error) {
+    console.warn("Scale analysis failed, using default:", error);
+    return { score: 5, style: "Standard", reasoning: "Fallback caused by error" };
+  }
+};
+
 export const ANALYSIS_FALLBACK: AnalysisResult = {
   scenePrompt: "Clean luxury studio background, high-end photography",
   material: "Gold",
@@ -334,10 +404,11 @@ export const generateLifestyleImage = async (
   },
   modelReferenceBase64?: string | null,
   modelPhysicalDescription?: string,
-  wornReferenceBase64s?: string[], // UPDATED: Changed to array for multi-upload
+  wornReferenceBase64s?: string[],
   shootMode?: 'catalog' | 'lifestyle',
   variationMode: 'standard' | 'playful' | 'artistic' = 'artistic',
-  detectedMaterial?: { material: string, gemColor: string }
+  detectedMaterial?: { material: string, gemColor: string },
+  scaleAnalysis?: ProductScaleResult | null // NEW: Smart Scale Analysis Result
 ): Promise<{ image: string | null; error: string | null }> => {
   const ai = createAI();
   const model = 'gemini-3-pro-image-preview';
@@ -407,6 +478,27 @@ export const generateLifestyleImage = async (
     PRIORITY: This scale reference overrides all other size instructions.
     
     *** END SCALE REFERENCE ***
+    `;
+  }
+
+  // ========================================
+  // SMART SCALE ENFORCEMENT (FROM ANALYSIS)
+  // ========================================
+  let scaleEnforcementPrompt = "";
+  if (scaleAnalysis && !scaleReferencePrompt) { // Only use if no strict worn reference is provided
+    let rule = "";
+    const ruleset = SCALE_RULES[category] || SCALE_RULES["default"];
+
+    if (scaleAnalysis.score <= 3) rule = ruleset["1-3"];
+    else if (scaleAnalysis.score <= 7) rule = ruleset["4-7"];
+    else rule = ruleset["8-10"];
+
+    scaleEnforcementPrompt = `
+    *** SMART SCALE ENFORCEMENT (ANALYSIS SCORE: ${scaleAnalysis.score}/10) ***
+    - Visual Analysis indicates this product is: ${scaleAnalysis.style.toUpperCase()}
+    - MANDATORY SCALE RULE: ${rule}
+    - DO NOT HALLUCINATE A DIFFERENT SIZE.
+    *** END SMART SCALE ***
     `;
   }
 
@@ -555,6 +647,7 @@ export const generateLifestyleImage = async (
 
     fullPrompt = `
     ${scaleReferencePrompt}
+    ${scaleEnforcementPrompt}
     
     ${modelIdentityPrompt}
 
@@ -694,6 +787,7 @@ export const generateLifestyleImage = async (
 
     fullPrompt = `
     ${scaleReferencePrompt}
+    ${scaleEnforcementPrompt}
     
     ${modelIdentityPrompt}
 
