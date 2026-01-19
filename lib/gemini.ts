@@ -910,6 +910,27 @@ export const generateLifestyleImage = async (
   }
 
   return { image: null, error: "Görsel verisi bulunamadı" };
+  return { image: null, error: "Görsel verisi bulunamadı" };
+};
+
+export const generateBatchLifestyleImages = async (
+  count: number,
+  ...args: Parameters<typeof generateLifestyleImage>
+): Promise<{ image: string | null; error: string | null }[]> => {
+  console.log(`🚀 Starting Batch Generation: ${count} parallel requests...`);
+
+  // Create an array of promises
+  const promises = Array.from({ length: count }, (_, i) =>
+    generateLifestyleImage(...args)
+      .then(res => ({ ...res, index: i })) // Add index to track order if needed
+      .catch(err => ({ image: null, error: err.message || "Unknown batch error" }))
+  );
+
+  // Execute in parallel
+  const results = await Promise.all(promises);
+  console.log("✅ Batch Generation Complete:", results);
+
+  return results;
 };
 
 export const generateJewelryVideo = async (inputImageBase64: string, category: string, stylePreset: string): Promise<string> => {

@@ -26,7 +26,7 @@ import {
   VideoCameraIcon,
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
-import { generateLifestyleImage, analyzeJewelry, generateJewelryVideo, analyzeProductVisuals, ProductScaleResult, AnalysisResult, JewelryProduct, ModelPersona, JOB_STATUS_MESSAGES, JobStatusKey, ANALYSIS_FALLBACK } from './lib/gemini';
+import { generateLifestyleImage, generateBatchLifestyleImages, analyzeJewelry, generateJewelryVideo, analyzeProductVisuals, ProductScaleResult, AnalysisResult, JewelryProduct, ModelPersona, JOB_STATUS_MESSAGES, JobStatusKey, ANALYSIS_FALLBACK } from './lib/gemini';
 import { createClient } from '@supabase/supabase-js';
 
 // --- CONFIGURATION ---
@@ -356,8 +356,11 @@ export default function App() {
       setJob(p => ({ ...p, status: 'generating' }));
 
       const selectedScene = (shootMode === 'catalog' ? CATALOG_PRESETS : LIFESTYLE_PRESETS).find(s => s.prompt === job.stylePreset) || (shootMode === 'catalog' ? CATALOG_PRESETS[0] : LIFESTYLE_PRESETS[0]);
+      const selectedPresetLabel = selectedScene.label || 'Generated';
 
-      const result = await generateLifestyleImage(
+      // CALL BATCH GENERATION
+      const results = await generateBatchLifestyleImages(
+        job.batchCount || 1, // Default to 1 if undefined
         job.productImages,
         selectedScene.prompt,
         job.category,
@@ -372,57 +375,69 @@ export default function App() {
         selectedModel.physicalDescription,
         job.wornReferenceImages,
         shootMode,
-        'artistic', // Variation Mode (default)
-        undefined,  // Detected Material (optional)
-        scaleAnalysis // NEW: Pass the analysis result
+        'artistic',
+        undefined,
+        scaleAnalysis
       );
 
-      if (result.error) throw new Error(result.error);
-      if (!result.image) throw new Error("Görsel oluşturulamadı.");
-
-      // 3. COMPLETE
-      const genTime = elapsedTime; // Capture final time
-      // --- ARCHIVE SAVING (Hybrid Cloud) ---
-      let finalImageUrl = result.image;
-      let isCloud = false;
-      const selectedPresetLabel = (shootMode === 'catalog' ? CATALOG_PRESETS : LIFESTYLE_PRESETS).find(s => s.prompt === job.stylePreset)?.label || 'Generated';
-
-      // Try uploading to Supabase to save local storage space
-      if (supabase) {
-        const cloudUrl = await uploadToSupabase(result.image);
-        if (cloudUrl) {
-          finalImageUrl = cloudUrl; // Use the URL instead of Base64
-          isCloud = true;
-        }
+      // FILTER SUCCESSFUL RESULTS
+      const successResults = results.filter(r => r.image && !r.error);
+      if (successResults.length === 0) {
+        throw new Error(results[0]?.error || "Görsel oluşturulamadı.");
       }
 
-      const newItem: GeneratedItem = {
-        id: Date.now().toString(),
-        image: isCloud ? finalImageUrl : result.image, // Store URL if cloud success, else Base64 (fallback)
-        label: selectedPresetLabel,
-        date: new Date().toLocaleTimeString(),
-        type: 'standard',
-        generationTime: genTime
-      };
+      // PROCESS EACH RESULT
+      const genTime = elapsedTime; // Capture final time
+      const newItems: GeneratedItem[] = [];
 
+      for (let i = 0; i < successResults.length; i++) {
+        const res = successResults[i];
+        if (!res.image) continue;
+
+        let finalImageUrl = res.image;
+        let isCloud = false;
+
+        // Try uploading to Supabase
+        if (supabase) {
+          try {
+            const cloudUrl = await uploadToSupabase(res.image);
+            if (cloudUrl) {
+              finalImageUrl = cloudUrl;
+              isCloud = true;
+            }
+          } catch (uploadErr) {
+            console.warn("Upload failed, falling back to base64", uploadErr);
+          }
+        }
+
+        newItems.push({
+          id: (Date.now() + i).toString(),
+          image: isCloud ? finalImageUrl : res.image,
+          label: `${selectedPresetLabel} #${i + 1}`,
+          date: new Date().toLocaleTimeString(),
+          type: 'standard',
+          generationTime: genTime
+        });
+      }
+
+      // UPDATE STATE WITH BATCH
       setJob(prev => ({
         ...prev,
         isGenerating: false,
-        resultImage: result.image, // Keep high-res base64 for immediate display
-        gallery: [newItem], // Show in gallery
-        selectedImageId: newItem.id,
+        resultImage: newItems[newItems.length - 1].image, // Show last one big
+        gallery: [...newItems], // Replace gallery with new batch
+        selectedImageId: newItems[newItems.length - 1].id,
         generationTime: genTime
       }));
 
-      // --- PERSISTENCE ---
-      const updatedArchive = [newItem, ...archive];
+      // PERSISTENCE (Add to Archive)
+      const updatedArchive = [...newItems, ...archive];
       setArchive(updatedArchive);
 
       try {
         localStorage.setItem('jewelry_archive', JSON.stringify(updatedArchive));
       } catch (e) {
         console.error("Local Storage Quota Warning:", e);
-        // If quota still hit (rare with URLs), trim old items
         if (updatedArchive.length > 20) {
           const trimmed = updatedArchive.slice(0, 20);
           setArchive(trimmed);
@@ -1124,7 +1139,23 @@ export default function App() {
                 </div>
               )}
 
-              <div className="flex gap-3 mt-4">
+              {/* BATCH CONTROL (New) */}
+              <div className="flex items-center justify-between mb-2 px-1">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Çıktı Sayısı</span>
+                <div className="flex bg-slate-100 rounded-lg p-1 gap-1">
+                  {[1, 2, 4].map(count => (
+                    <button
+                      key={count}
+                      onClick={() => setJob(p => ({ ...p, batchCount: count }))}
+                      className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${job.batchCount === count ? 'bg-white shadow text-brand-dark' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                      {count}x
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-2">
                 <button
                   onClick={handleGenerate}
                   disabled={job.isGenerating}
@@ -1132,7 +1163,7 @@ export default function App() {
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
                   {job.isGenerating ? <ArrowPathIcon className="h-5 w-5 animate-spin text-white" /> : <SparklesIcon className="h-5 w-5 group-hover:animate-pulse" />}
-                  {job.isGenerating ? 'Sanat Eseri İşleniyor...' : 'Koleksiyonu Oluştur'}
+                  {job.isGenerating ? `İşleniyor (${job.batchCount}x)...` : `Koleksiyonu Oluştur (${job.batchCount} Adet)`}
                 </button>
 
                 {job.gallery.length > 0 && (
