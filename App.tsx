@@ -326,8 +326,9 @@ export default function App() {
   };
 
   const handleGenerate = async () => {
-    if (job.productImages.length === 0) {
-      setJob(p => ({ ...p, error: "Lütfen en az bir ürün görseli yükleyin." }));
+    // UPDATED: Allow generation with either product images OR worn reference images
+    if (job.productImages.length === 0 && job.wornReferenceImages.length === 0) {
+      setJob(p => ({ ...p, error: "Lütfen en az bir ürün görseli veya giyilmiş referans yükleyin." }));
       return;
     }
 
