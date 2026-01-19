@@ -461,6 +461,38 @@ export const generateLifestyleImage = async (
 
     if (categoryLower.includes('ring') || categoryLower.includes('yüzük')) {
       categoryScalePrompt = `
+      *** RING WEARING PHYSICS & ORIENTATION (CRITICAL) ***
+      
+      STEP 1: IDENTIFY THE FINGER ENTRY POINT
+      - Look at the product reference image carefully.
+      - Find the OPENING/GAP/HOLE where the finger enters the ring.
+      - This is usually the WIDEST part of the ring band.
+      - This opening is typically at the BOTTOM when the ring is standing upright in the photo.
+      - This opening is OPPOSITE to the gemstone/decorative element.
+      
+      STEP 2: UNDERSTAND THE FINGER PATH
+      - The finger enters from the OPENING (bottom of the product photo).
+      - The finger moves UPWARD through the ring.
+      - The finger passes UNDERNEATH the gemstone/decorative part.
+      - Result: The gemstone ends up ON TOP of the finger (visible from above).
+      
+      STEP 3: CORRECT WORN ORIENTATION
+      - GEMSTONE/DECORATIVE PART: Must be on TOP of the finger (knuckle side, visible).
+      - OPENING/SPLIT SHANK: Must be on BOTTOM of the finger (palm side, hidden from top view).
+      - The ring wraps around the finger with the opening hugging from below.
+      
+      VERIFICATION CHECKLIST:
+      - ✓ Can you see the gemstone from the top/front view? (Should be YES)
+      - ✓ Is the opening/split visible from the top view? (Should be NO - it's on the palm side)
+      - ✓ Does the gemstone appear on the knuckle side? (Should be YES)
+      - If any answer is wrong, the ring is UPSIDE DOWN or INCORRECTLY ORIENTED.
+      
+      STRICTLY FORBIDDEN:
+      - DO NOT flip the ring 180° from its reference orientation.
+      - DO NOT show the opening/split on top of the finger.
+      - DO NOT place the gemstone on the palm side.
+      - The finger does NOT enter from the gemstone side.
+      
       *** RING-SPECIFIC SCALE RULES ***
       - THE RING BAND RULE: The inner diameter of the ring MUST match the width of the model's finger exactly.
       - FLESH INTERACTION: Focus on the connection point between the finger and the ring. The skin should slightly press against the metal (realistic contact).
