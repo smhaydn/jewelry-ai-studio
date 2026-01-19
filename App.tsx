@@ -101,7 +101,7 @@ interface JobState {
   aspectRatio: string;
   logoImage: string | null;
   showBranding: boolean;
-  wornReferenceImage: string | null; // NEW: Worn photo for scale reference
+  wornReferenceImages: string[]; // UPDATED: Changed to array for multi-upload
   generatedVideo: string | null; // URL for generated video
   isVideoGenerating: boolean;
   selectedImageId: string | null; // ID of the currently selected main image
@@ -190,7 +190,7 @@ export default function App() {
     aspectRatio: '1:1',
     logoImage: null,
     showBranding: false,
-    wornReferenceImage: null, // NEW: Initialize as null
+    wornReferenceImages: [], // UPDATED: Initialize as empty array
     generatedVideo: null,
     isVideoGenerating: false,
     selectedImageId: null,
@@ -259,16 +259,17 @@ export default function App() {
 
   const handleProductUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const files = Array.from(e.target.files).slice(0, 3);
+      const files = Array.from(e.target.files).slice(0, 5); // UPDATED: Allow up to 5 images
       const base64s = await Promise.all(files.map(fileToBase64));
       setJob(prev => ({ ...prev, productImages: base64s, error: null }));
     }
   };
 
   const handleWornReferenceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const base64 = await fileToBase64(e.target.files[0]);
-      setJob(prev => ({ ...prev, wornReferenceImage: base64 }));
+    if (e.target.files) {
+      const files = Array.from(e.target.files).slice(0, 5); // UPDATED: Allow up to 5 images
+      const base64s = await Promise.all(files.map(fileToBase64));
+      setJob(prev => ({ ...prev, wornReferenceImages: base64s }));
     }
   };
 
@@ -361,7 +362,7 @@ export default function App() {
         },
         selectedModel.image,
         selectedModel.physicalDescription,
-        job.wornReferenceImage, // NEW: Pass worn reference for scale
+        job.wornReferenceImages, // UPDATED: Pass array instead of single image
         shootMode
       );
 
@@ -795,7 +796,7 @@ export default function App() {
                 <label className="block w-full h-24 border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center cursor-pointer hover:bg-slate-50">
                   <div className="text-center">
                     {job.productImages.length > 0 ? <CheckCircleIcon className="h-8 w-8 text-green-500 mx-auto" /> : <PhotoIcon className="h-8 w-8 text-slate-300 mx-auto" />}
-                    <span className="text-xs text-slate-500 mt-1 block">{job.productImages.length > 0 ? `${job.productImages.length} Görsel Seçildi` : 'Yükle (Ön, Yan, Detay)'}</span>
+                    <span className="text-xs text-slate-500 mt-1 block">{job.productImages.length > 0 ? `${job.productImages.length} Görsel Seçildi (Max 5)` : 'Yükle (Max 5 Görsel)'}</span>
                   </div>
                   <input type="file" multiple className="hidden" onChange={handleProductUpload} />
                 </label>
@@ -811,37 +812,45 @@ export default function App() {
 
                 <label className="block w-full h-20 border-2 border-dashed border-purple-200 rounded-lg flex items-center justify-center cursor-pointer hover:bg-purple-50 transition-colors">
                   <div className="text-center">
-                    {job.wornReferenceImage ? (
+                    {job.wornReferenceImages.length > 0 ? (
                       <CheckCircleIcon className="h-6 w-6 text-purple-500 mx-auto" />
                     ) : (
                       <PhotoIcon className="h-6 w-6 text-purple-300 mx-auto" />
                     )}
                     <span className="text-xs text-slate-500 mt-1 block">
-                      {job.wornReferenceImage ? 'Referans Yüklendi ✓' : 'Giyilmiş Foto Yükle'}
+                      {job.wornReferenceImages.length > 0 ? `${job.wornReferenceImages.length} Referans Yüklendi (Max 5)` : 'Giyilmiş Foto Yükle (Max 5)'}
                     </span>
                   </div>
                   <input
                     type="file"
                     accept="image/*"
+                    multiple
                     className="hidden"
                     onChange={handleWornReferenceUpload}
                   />
                 </label>
 
-                {job.wornReferenceImage && (
-                  <div className="mt-2 relative">
-                    <img
-                      src={`data:image/jpeg;base64,${job.wornReferenceImage}`}
-                      className="w-full h-32 object-cover rounded-lg border border-purple-200"
-                      alt="Worn Reference"
-                    />
-                    <button
-                      onClick={() => setJob(p => ({ ...p, wornReferenceImage: null }))}
-                      className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
-                      title="Sil"
-                    >
-                      <XMarkIcon className="h-3 w-3" />
-                    </button>
+                {job.wornReferenceImages.length > 0 && (
+                  <div className="mt-2 grid grid-cols-3 gap-2">
+                    {job.wornReferenceImages.map((img, idx) => (
+                      <div key={idx} className="relative">
+                        <img
+                          src={`data:image/jpeg;base64,${img}`}
+                          className="w-full h-24 object-cover rounded-lg border border-purple-200"
+                          alt={`Worn Reference ${idx + 1}`}
+                        />
+                        <button
+                          onClick={() => setJob(p => ({
+                            ...p,
+                            wornReferenceImages: p.wornReferenceImages.filter((_, i) => i !== idx)
+                          }))}
+                          className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+                          title="Sil"
+                        >
+                          <XMarkIcon className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

@@ -334,7 +334,7 @@ export const generateLifestyleImage = async (
   },
   modelReferenceBase64?: string | null,
   modelPhysicalDescription?: string,
-  wornReferenceBase64?: string | null, // NEW: Worn photo for scale reference
+  wornReferenceBase64s?: string[], // UPDATED: Changed to array for multi-upload
   shootMode?: 'catalog' | 'lifestyle',
   variationMode: 'standard' | 'playful' | 'artistic' = 'artistic',
   detectedMaterial?: { material: string, gemColor: string }
@@ -385,23 +385,24 @@ export const generateLifestyleImage = async (
   // SCALE REFERENCE (WORN PHOTO)
   // ========================================
   let scaleReferencePrompt = "";
-  if (wornReferenceBase64) {
+  if (wornReferenceBase64s && wornReferenceBase64s.length > 0) {
     scaleReferencePrompt = `
     *** SCALE REFERENCE (CRITICAL - HIGHEST PRIORITY) ***
     
-    IMPORTANT: One of the reference images shows the product WORN on a real person.
-    This is your ABSOLUTE SCALE ANCHOR.
+    IMPORTANT: ${wornReferenceBase64s.length} of the reference images show the product WORN on real people.
+    These are your ABSOLUTE SCALE ANCHORS.
     
     MANDATORY RULES:
-    1. Identify which image shows the product worn (on hand/neck/ear/wrist).
-    2. Measure the product-to-body ratio in that worn reference image.
-    3. In your generated image, the product MUST be the EXACT SAME SIZE relative to the model's body.
-    4. DO NOT make the product larger or smaller than shown in the worn reference.
-    5. Copy the size ratio 1:1 from the worn reference.
+    1. Identify which images show the product worn (on hand/neck/ear/wrist).
+    2. Measure the product-to-body ratio in those worn reference images.
+    3. Use ALL worn reference images to understand the correct product size from multiple angles.
+    4. In your generated image, the product MUST be the EXACT SAME SIZE relative to the model's body.
+    5. DO NOT make the product larger or smaller than shown in the worn references.
+    6. Copy the size ratio 1:1 from the worn references.
     
     VERIFICATION:
-    - Compare: "Is the product the same size relative to the body part as in the worn reference?"
-    - If the product looks bigger or smaller, ADJUST IT to match the worn reference exactly.
+    - Compare: "Is the product the same size relative to the body part as in the worn references?"
+    - If the product looks bigger or smaller, ADJUST IT to match the worn references exactly.
     
     PRIORITY: This scale reference overrides all other size instructions.
     
@@ -761,8 +762,10 @@ export const generateLifestyleImage = async (
   }
 
   // WORN REFERENCE (Scale anchor)
-  if (wornReferenceBase64) {
-    parts.push({ inlineData: { mimeType: 'image/jpeg', data: wornReferenceBase64 } });
+  if (wornReferenceBase64s && wornReferenceBase64s.length > 0) {
+    wornReferenceBase64s.forEach(img => {
+      parts.push({ inlineData: { mimeType: 'image/jpeg', data: img } });
+    });
   }
 
   const request: any = {
