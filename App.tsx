@@ -617,21 +617,21 @@ export default function App() {
   const filteredModels = models.filter(m => m.category === modelTab);
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-brand-goldLight selection:text-brand-dark">
       {/* HEADER */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="bg-indigo-600 text-white p-2 rounded-lg shadow-lg shadow-indigo-200">
+      <header className="bg-white/80 backdrop-blur-xl border-b border-brand-gold/10 sticky top-0 z-50 transition-all duration-300">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-3 group cursor-pointer">
+            <div className="bg-brand-dark text-brand-gold p-2.5 rounded-xl shadow-lg shadow-brand-gold/20 group-hover:scale-105 transition-transform duration-300">
               <SparklesIcon className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">Jewelry AI Studio</h1>
-              <p className="text-[10px] text-slate-500 font-bold tracking-wider">PROFESSIONAL EDITION</p>
+              <h1 className="text-2xl font-serif font-bold text-slate-900 tracking-tight group-hover:text-brand-purple transition-colors">Jewelry AI Studio</h1>
+              <p className="text-[10px] text-brand-gold font-bold tracking-[0.2em] uppercase">Professional Edition</p>
             </div>
           </div>
 
-          <nav className="flex bg-slate-100 p-1 rounded-xl">
+          <nav className="flex items-center gap-1 bg-slate-100/50 p-1.5 rounded-2xl border border-white shadow-sm backdrop-blur-sm">
             {[
               { id: 'studio', label: 'Stüdyo', icon: CubeIcon },
               { id: 'models', label: 'Mankenler', icon: UserIcon },
@@ -641,9 +641,12 @@ export default function App() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${activeTab === tab.id ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-300 ${activeTab === tab.id
+                  ? 'bg-white text-brand-purple shadow-md shadow-brand-purple/5 border border-brand-purple/10 scale-100'
+                  : 'text-slate-500 hover:text-slate-900 hover:bg-white/50 scale-95 hover:scale-100'
+                  }`}
               >
-                <tab.icon className="h-4 w-4" />
+                <tab.icon className={`h-4 w-4 ${activeTab === tab.id ? 'stroke-2' : ''}`} />
                 {tab.label}
               </button>
             ))}
@@ -774,52 +777,76 @@ export default function App() {
 
               {/* --- CATEGORY SELECTOR --- */}
               <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm ring-2 ring-indigo-50">
-                <h3 className="font-bold text-slate-900 mb-2 flex items-center gap-2 text-sm"><TagIcon className="h-4 w-4 text-indigo-600" /> Kategori Seçimi (Önemli)</h3>
-                <p className="text-[10px] text-slate-500 mb-2">Prompt ve crop ayarları buna göre yapılır.</p>
-                <div className="relative">
-                  <select value={job.category} onChange={(e) => setJob(p => ({ ...p, category: e.target.value }))} className="w-full appearance-none bg-indigo-50 border border-indigo-200 text-indigo-900 text-sm font-bold py-2.5 pl-3 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer">
+                <h3 className="font-serif font-bold text-slate-900 mb-3 flex items-center gap-2 text-base tracking-wide">
+                  <TagIcon className="h-5 w-5 text-brand-gold stroke-2" />
+                  Kategori Seçimi
+                </h3>
+                <p className="text-[11px] text-slate-400 font-medium tracking-wide uppercase mb-3">AI Optimizasyonu İçin Önemli</p>
+                <div className="relative group">
+                  <select
+                    value={job.category}
+                    onChange={(e) => setJob(p => ({ ...p, category: e.target.value }))}
+                    className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-700 text-sm font-semibold py-3.5 pl-4 pr-10 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-purple/50 focus:border-brand-purple hover:border-brand-purple/30 transition-all cursor-pointer shadow-sm group-hover:shadow-md"
+                  >
                     {PRODUCT_CATEGORIES.map(c => <option key={c.id} value={c.label}>{c.label}</option>)}
                   </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-indigo-600"><ChevronDownIcon className="h-4 w-4" /></div>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-brand-purple group-hover:scale-110 transition-transform"><ChevronDownIcon className="h-4 w-4 stroke-2" /></div>
                 </div>
               </div>
 
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-sm"><CloudArrowUpIcon className="h-4 w-4" /> Ürün (3 Açı)</h3>
+              <div className="bg-white p-6 rounded-2xl shadow-xl shadow-slate-200/50 border border-white hover:border-brand-purple/20 transition-all duration-300">
+                <h3 className="font-serif font-bold text-slate-900 mb-4 flex items-center gap-2 text-base tracking-wide">
+                  <CloudArrowUpIcon className="h-5 w-5 text-brand-purple stroke-2" />
+                  Ürün Görselleri
+                </h3>
 
                 {job.error && (
-                  <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-[10px] text-red-600 animate-in fade-in slide-in-from-top-1">
-                    <XMarkIcon className="h-4 w-4 flex-shrink-0" />
+                  <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-xs font-medium text-red-600 animate-in fade-in slide-in-from-top-2 shadow-sm">
+                    <XMarkIcon className="h-5 w-5 flex-shrink-0" />
                     <span>{job.error}</span>
                   </div>
                 )}
 
-                <label className="block w-full h-24 border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center cursor-pointer hover:bg-slate-50">
-                  <div className="text-center">
-                    {job.productImages.length > 0 ? <CheckCircleIcon className="h-8 w-8 text-green-500 mx-auto" /> : <PhotoIcon className="h-8 w-8 text-slate-300 mx-auto" />}
-                    <span className="text-xs text-slate-500 mt-1 block">{job.productImages.length > 0 ? `${job.productImages.length} Görsel Seçildi (Max 5)` : 'Yükle (Max 5 Görsel)'}</span>
+                <label className={`block w-full h-32 border-2 border-dashed rounded-xl flex items-center justify-center cursor-pointer transition-all duration-300 group ${job.productImages.length > 0 ? 'border-green-400 bg-green-50/30' : 'border-slate-200 hover:border-brand-purple/50 hover:bg-slate-50'}`}>
+                  <div className="text-center group-hover:scale-105 transition-transform duration-300">
+                    {job.productImages.length > 0 ? (
+                      <CheckCircleIcon className="h-10 w-10 text-green-500 mx-auto drop-shadow-sm" />
+                    ) : (
+                      <PhotoIcon className="h-10 w-10 text-slate-300 group-hover:text-brand-purple/70 mx-auto transition-colors" />
+                    )}
+                    <span className="text-xs font-medium text-slate-500 mt-3 block">
+                      {job.productImages.length > 0 ? (
+                        <span className="text-green-600 font-bold">{job.productImages.length} Görsel Hazır</span>
+                      ) : (
+                        <span><span className="text-brand-purple font-bold">Yükle</span> veya Sürükle (Max 5)</span>
+                      )}
+                    </span>
                   </div>
                   <input type="file" multiple className="hidden" onChange={handleProductUpload} />
                 </label>
               </div>
 
               {/* Worn Reference Upload */}
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <h3 className="font-bold text-slate-900 mb-2 flex items-center gap-2 text-sm">
-                  <EyeIcon className="h-4 w-4 text-purple-600" />
-                  Giyilmiş Referans (Opsiyonel)
+              <div className="bg-white p-6 rounded-2xl shadow-xl shadow-slate-200/50 border border-white hover:border-brand-purple/20 transition-all duration-300">
+                <h3 className="font-serif font-bold text-slate-900 mb-2 flex items-center gap-2 text-base tracking-wide">
+                  <EyeIcon className="h-5 w-5 text-brand-gold stroke-2" />
+                  Giyilmiş Referans <span className="text-[10px] font-sans font-medium bg-brand-gold/10 text-brand-gold px-2 py-0.5 rounded-full ml-auto">OPSİYONEL</span>
                 </h3>
-                <p className="text-[10px] text-slate-500 mb-3">Ürünün gerçek ölçekte giyilmiş fotoğrafı - AI için ölçek referansı</p>
+                <p className="text-[11px] text-slate-400 mb-4 font-medium leading-relaxed">Ürünün gerçek ölçekte duruşunu AI'a öğretmek için kullanın.</p>
 
-                <label className="block w-full h-20 border-2 border-dashed border-purple-200 rounded-lg flex items-center justify-center cursor-pointer hover:bg-purple-50 transition-colors">
-                  <div className="text-center">
+                <label className={`block w-full h-24 border-2 border-dashed rounded-xl flex items-center justify-center cursor-pointer transition-all duration-300 group ${job.wornReferenceImages.length > 0 ? 'border-brand-gold bg-brand-gold/5' : 'border-brand-gold/30 hover:border-brand-gold hover:bg-brand-gold/5'}`}>
+                  <div className="text-center group-hover:scale-105 transition-transform duration-300">
                     {job.wornReferenceImages.length > 0 ? (
-                      <CheckCircleIcon className="h-6 w-6 text-purple-500 mx-auto" />
+                      <CheckCircleIcon className="h-7 w-7 text-brand-gold mx-auto drop-shadow-sm" />
                     ) : (
-                      <PhotoIcon className="h-6 w-6 text-purple-300 mx-auto" />
+                      <PhotoIcon className="h-7 w-7 text-brand-gold/40 group-hover:text-brand-gold mx-auto transition-colors" />
                     )}
-                    <span className="text-xs text-slate-500 mt-1 block">
-                      {job.wornReferenceImages.length > 0 ? `${job.wornReferenceImages.length} Referans Yüklendi (Max 5)` : 'Giyilmiş Foto Yükle (Max 5)'}
+                    <span className="text-xs font-medium text-slate-500 mt-2 block">
+                      {job.wornReferenceImages.length > 0 ? (
+                        <span className="text-brand-gold font-bold">{job.wornReferenceImages.length} Referans Seçildi</span>
+                      ) : (
+                        'Ölçek Referansı Ekle'
+                      )}
                     </span>
                   </div>
                   <input
@@ -856,38 +883,48 @@ export default function App() {
                 )}
               </div>
 
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="font-bold text-slate-900 flex items-center gap-2 text-sm"><UserIcon className="h-4 w-4" /> Manken</h3>
-                  <div className="flex bg-slate-100 p-0.5 rounded text-[10px] font-bold">
-                    <button onClick={() => setModelTab('Female')} className={`px-2 py-1 rounded ${modelTab === 'Female' ? 'bg-white shadow text-indigo-600' : 'text-slate-500'}`}>Kadın</button>
-                    <button onClick={() => setModelTab('Male')} className={`px-2 py-1 rounded ${modelTab === 'Male' ? 'bg-white shadow text-indigo-600' : 'text-slate-500'}`}>Erkek</button>
+              <div className="bg-white p-6 rounded-2xl shadow-xl shadow-slate-200/50 border border-white hover:border-brand-purple/20 transition-all duration-300">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-serif font-bold text-slate-900 flex items-center gap-2 text-base tracking-wide">
+                    <UserIcon className="h-5 w-5 text-brand-purple stroke-2" />
+                    Manken
+                  </h3>
+                  <div className="flex bg-slate-100/80 p-1 rounded-xl backdrop-blur-sm">
+                    <button onClick={() => setModelTab('Female')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${modelTab === 'Female' ? 'bg-white shadow-md text-brand-purple' : 'text-slate-500 hover:text-slate-700'}`}>Kadın</button>
+                    <button onClick={() => setModelTab('Male')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${modelTab === 'Male' ? 'bg-white shadow-md text-brand-purple' : 'text-slate-500 hover:text-slate-700'}`}>Erkek</button>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-3">
                   {filteredModels.map(m => (
                     <button
                       key={m.id}
                       onClick={() => setJob(p => ({ ...p, selectedModelId: m.id }))}
-                      className={`relative rounded-lg overflow-hidden border-2 transition-all ${job.selectedModelId === m.id ? 'border-indigo-600 ring-2 ring-indigo-200' : 'border-transparent'}`}
+                      className={`relative rounded-xl overflow-hidden border-2 transition-all aspect-square group ${job.selectedModelId === m.id ? 'border-brand-gold ring-4 ring-brand-gold/20 scale-105 z-10' : 'border-transparent hover:border-slate-300 opacity-80 hover:opacity-100 hover:scale-105'}`}
                     >
-                      <img src={`data:image/jpeg;base64,${m.image}`} className="w-full h-16 object-cover" />
+                      <img src={`data:image/jpeg;base64,${m.image}`} className="w-full h-full object-cover" />
+                      {job.selectedModelId === m.id && <div className="absolute inset-0 bg-brand-gold/10" />}
                     </button>
                   ))}
-                  <button onClick={() => setActiveTab('models')} className="border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center h-16 text-slate-400 hover:text-indigo-600 hover:border-indigo-300 transition-colors">
-                    <span className="text-xs font-bold">+</span>
+                  <button onClick={() => setActiveTab('models')} className="border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center aspect-square text-slate-400 hover:text-brand-purple hover:border-brand-purple/50 hover:bg-brand-purple/5 transition-all group">
+                    <span className="text-2xl font-light group-hover:scale-125 transition-transform">+</span>
                   </button>
                 </div>
               </div>
 
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <div className="bg-white p-6 rounded-2xl shadow-xl shadow-slate-200/50 border border-white hover:border-brand-purple/20 transition-all duration-300">
                 <div className="flex justify-between items-center mb-3">
-                  <h3 className="font-bold text-slate-900 flex items-center gap-2 text-sm"><PaintBrushIcon className="h-4 w-4" /> Branding</h3>
-                  <input type="checkbox" checked={job.showBranding} onChange={e => setJob(p => ({ ...p, showBranding: e.target.checked }))} className="toggle" />
+                  <h3 className="font-serif font-bold text-slate-900 flex items-center gap-2 text-base tracking-wide">
+                    <PaintBrushIcon className="h-5 w-5 text-brand-purple stroke-2" />
+                    Branding
+                  </h3>
+                  <div className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" checked={job.showBranding} onChange={e => setJob(p => ({ ...p, showBranding: e.target.checked }))} className="sr-only peer" />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-purple/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-purple"></div>
+                  </div>
                 </div>
                 {job.showBranding && (
-                  <label className="block w-full h-16 border border-slate-200 rounded-lg flex items-center justify-center cursor-pointer bg-slate-50 hover:bg-slate-100">
-                    {job.logoImage ? <img src={`data:image/png;base64,${job.logoImage}`} className="h-8 object-contain" /> : <span className="text-xs text-slate-400">Logo Yükle (PNG)</span>}
+                  <label className="block w-full h-16 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center cursor-pointer bg-slate-50/50 hover:bg-white hover:border-brand-purple/50 hover:shadow-md transition-all group animate-in fade-in slide-in-from-top-2">
+                    {job.logoImage ? <img src={`data:image/png;base64,${job.logoImage}`} className="h-8 object-contain drop-shadow-sm" /> : <span className="text-xs font-bold text-slate-400 group-hover:text-brand-purple transition-colors">Logo Yükle (PNG)</span>}
                     <input type="file" accept="image/png" className="hidden" onChange={async (e) => {
                       if (e.target.files?.[0]) {
                         const logo = await fileToBase64(e.target.files[0]);
@@ -1077,19 +1114,27 @@ export default function App() {
                 </div>
               )}
 
-              <div className="flex gap-2">
-                <button onClick={handleGenerate} disabled={job.isGenerating} className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-xl font-bold hover:shadow-lg hover:from-purple-700 hover:to-pink-700 transition-all flex items-center justify-center gap-2">
-                  {job.isGenerating ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <SparklesIcon className="h-5 w-5" />}
-                  {job.isGenerating ? 'Sanat Eseri İşleniyor...' : 'Sanatsal Görsel Üret'}
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={handleGenerate}
+                  disabled={job.isGenerating}
+                  className="flex-1 bg-brand-dark text-brand-gold py-4 rounded-xl font-serif font-bold tracking-widest uppercase text-sm hover:shadow-2xl hover:shadow-brand-gold/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3 relative overflow-hidden group border border-brand-gold/20"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
+                  {job.isGenerating ? <ArrowPathIcon className="h-5 w-5 animate-spin text-white" /> : <SparklesIcon className="h-5 w-5 group-hover:animate-pulse" />}
+                  {job.isGenerating ? 'Sanat Eseri İşleniyor...' : 'Koleksiyonu Oluştur'}
                 </button>
+
                 {job.gallery.length > 0 && (
-                  <button onClick={saveToArchive} className="bg-indigo-50 text-indigo-700 px-4 rounded-xl font-bold hover:bg-indigo-100 border border-indigo-200 flex items-center gap-2" title="Arşive Kaydet">
-                    <ArchiveBoxIcon className="h-5 w-5" />
+                  <button onClick={saveToArchive} className="bg-white text-slate-600 px-5 rounded-xl font-medium hover:bg-slate-50 border border-slate-200 hover:border-brand-purple/50 hover:text-brand-purple shadow-sm transition-all flex items-center justify-center" title="Arşive Kaydet">
+                    <ArchiveBoxIcon className="h-6 w-6" />
                   </button>
                 )}
+
                 {activeImage && (
-                  <button onClick={handleVideoGen} className="bg-pink-600 text-white px-6 rounded-xl font-bold hover:bg-pink-700 flex items-center gap-2">
-                    <VideoCameraIcon className="h-5 w-5" /> Video
+                  <button onClick={handleVideoGen} className="bg-gradient-to-r from-pink-500 to-rose-500 text-white px-6 rounded-xl font-bold shadow-lg shadow-pink-200 hover:shadow-pink-300 hover:scale-105 transition-all flex items-center gap-2">
+                    <VideoCameraIcon className="h-5 w-5" />
+                    <span className="hidden sm:inline">Reels Videosu</span>
                   </button>
                 )}
               </div>

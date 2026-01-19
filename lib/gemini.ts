@@ -605,6 +605,31 @@ export const generateLifestyleImage = async (
     - Net-A-Porter / Farfetch catalog style
     - Perfectionist, controlled, technical
     
+    *** FOCUS PRIORITY (CRITICAL - UNIVERSAL FOR ALL PRODUCTS) ***
+    
+    - PRIMARY FOCUS POINT: THE ${category.toUpperCase()}
+    - The ${category} MUST be in RAZOR-SHARP focus
+    - Product sharpness > Model sharpness > Background sharpness
+    
+    WHAT IS THE PRODUCT:
+    - The ${category} is the subject of this photograph
+    - Every detail of the ${category} must be visible and sharp
+    - Texture, facets, patterns, logos, designs on the ${category} must be crystal clear
+    
+    CRITICAL RULE:
+    - This is ${category.toUpperCase()} PHOTOGRAPHY, not PORTRAIT photography
+    - The ${category} is the HERO, not the model
+    - If you must choose between sharp product or sharp model face, ALWAYS choose sharp product
+    - The model is a display tool for the ${category}, nothing more
+    
+    FOCUS TECHNIQUE:
+    - Lock focus on the ${category}
+    - Use focus peaking on the product
+    - The ${category} should be the sharpest element in the entire image
+    - Model can be slightly softer (acceptable and preferred if it emphasizes product)
+    
+    *** END FOCUS PRIORITY ***
+    
     *** CRITICAL: PHYSICS & SCALE ENFORCEMENT (THE GOLDEN RULE) ***
     
     - OBJECTIVE: The jewelry must look WEARABLE and REALISTIC in size.
