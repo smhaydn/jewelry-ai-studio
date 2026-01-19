@@ -101,25 +101,25 @@ export interface ProductScaleResult {
 
 const SCALE_RULES: Record<string, { [key: string]: string }> = {
   "Ring": {
-    "1-3": "EXTREMELY DELICATE. Width max 2mm. Must look fragile and thin.",
-    "4-7": "STANDARD RING. Width max 6mm. Perfectly balanced usage of finger space.",
-    "8-10": "BOLD / COCKTAIL. Max width 15mm. STRICT CONSTRAINT: Must NOT exceed the knuckle joint. Must NOT look like a glove or armor."
+    "1-3": "EXTREMELY DELICATE. Band width: 1.2mm - 1.5mm (Ultra-thin wire). Stone: Small solitaire (< 5mm).",
+    "4-7": "STANDARD FIT. Band width: 2.5mm - 4mm. Stone: Realistic size (6mm - 8mm). Looks comfortable.",
+    "8-10": "STATEMENT RING. Band width: Max 6mm-8mm. Stone: Max 12mm. STRICT: Must fit BETWEEN the knuckles. NO boxing-glove size."
   },
   "Necklace": {
-    "1-3": "INVISIBLE THREAD. Chain < 1mm. Pendant < 10mm. Very subtle.",
-    "4-7": "VISIBLE GOLD. Chain 2-3mm. Pendant approx 20mm. Nice presence.",
-    "8-10": "RUNWAY PIECE. Chain can be thick. Pendant max 50mm. Do not cover the entire chest."
+    "1-3": "INVISIBLE THREAD. Chain thickness: 0.5mm - 0.8mm. Pendant: < 10mm. Very subtle glint.",
+    "4-7": "VISIBLE GOLD. Chain thickness: 1.5mm - 2mm. Pendant: 15mm - 25mm. Standard luxury.",
+    "8-10": "RUNWAY PIECE. Chain thickness: Max 4mm. Pendant: Max 40mm. DO NOT cover the whole chest. Minimalist bold."
   },
   "Earrings": {
-    "1-3": "TINY STUD. Max 8mm. Stops at earlobe.",
-    "4-7": "ELEGANT DROP. Length max 40mm. Does not touch shoulder.",
-    "8-10": "SHOULDER DUSTER. Length max 80mm. Heavy visual weight but realistic gravity."
+    "1-3": "TINY STUD. Size: 3mm - 6mm. Sits entirely on the earlobe.",
+    "4-7": "ELEGANT DROP. Length: 20mm - 40mm. Clear separation from shoulder.",
+    "8-10": "SHOULDER DUSTER. Length: Max 70mm. Must respect gravity (hang vertically). Not heavy looking."
   },
   // Default fallback for other categories
   "default": {
-    "1-3": "MINIMALIST. Keep it small and precise.",
-    "4-7": "STANDARD. Balanced visual weight.",
-    "8-10": "BOLD. Strong presence but REALISTIC PHYSICS."
+    "1-3": "MINIMALIST. Ultra-fine details. Looks expensive and light.",
+    "4-7": "STANDARD. Balanced visual weight. Commercial sizing.",
+    "8-10": "BOLD. Strong presence but REALISTIC PHYSICS. Not a toy."
   }
 };
 
@@ -659,12 +659,14 @@ export const generateLifestyleImage = async (
     ${poseAnchor}
     
     CAMERA SETTINGS:
-    - Shot on Sony A7R IV, 85mm Lens (NOT 100mm Macro)
-    - Aperture: f/11 to f/16 (Everything in sharp focus, no bokeh)
+    - Shot on Sony A7R IV, 100mm Macro Portrait Lens (Distance Requirement)
+    - Aperture: f/8 to f/11 (Sharp but natural falloff)
     - ISO: 100 (Clean, noise-free)
     - Shutter: 1/125s (Studio sync)
-    - FRAMING: Medium Close-Up (Chest up or Waist up). DO NOT frame only the hand/jewelry.
-    - CRITICAL: Showing more of the body helps establish correct scale. The hand must look proportional to the torso.
+    - FRAMING: Medium Close-Up (Chest up or Waist up). 
+    - DISTANCE RULE: Camera MUST be 1.5 - 2 meters away from the model. 
+    - ANTI-MACRO: DO NOT ZOOM IN ON THE JEWELRY. If you zoom, the ring looks like a balloon. Keep the camera back.
+    - SCALE REFERENCE: Showing the shoulder, neck, and torso is MANDATORY to establish correct ring size.
     
     LIGHTING:
     - Studio Softbox Lighting (3-point setup)
@@ -740,15 +742,13 @@ export const generateLifestyleImage = async (
     *** END SCALE ENFORCEMENT ***
     
     NEGATIVE PROMPT (STRICTLY FORBIDDEN):
-    - NO blurry background
-    - NO messy hair
-    - NO emotional expression
-    - NO props or lifestyle elements
-    - NO candid moments
-    - NO natural imperfections
-    - NO bokeh or shallow depth of field
-    - NO oversized jewelry (giant props)
-    - NO floating jewelry (must touch skin)
+    - (oversized jewelry:1.5), (giant ring:1.5), (boxing glove ring:1.4)
+    - (thick band:1.3), (costume jewelry:1.3), (toy ring:1.2)
+    - (plastic look:1.3), (3D render:1.3), (CGI:1.3)
+    - macro photography, extreme close-up, microscope view
+    - distorted fingers, bad anatomy, floating jewelry
+    - blurry background, messy hair, emotional expression
+    - NO props, NO lifestyle elements, NO candid moments
     
     PRODUCT FIDELITY:
     - The product images are SACRED. Do not alter the design.
