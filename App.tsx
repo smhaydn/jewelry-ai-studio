@@ -446,7 +446,8 @@ export default function App() {
         resultImage: newItems[newItems.length - 1].image, // Show last one big
         gallery: [...newItems], // Replace gallery with new batch
         selectedImageId: newItems[newItems.length - 1].id,
-        generationTime: genTime
+        generationTime: genTime,
+        debugLog: [...prev.debugLog, `✅ İşlem Tamamlandı (${genTime.toFixed(1)}s)`, ...(successResults[0]?.debugInfo ? [successResults[0].debugInfo] : [])]
       }));
 
       // PERSISTENCE (Add to Archive)

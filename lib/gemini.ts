@@ -431,7 +431,7 @@ export const generateLifestyleImage = async (
   variationMode: 'standard' | 'playful' | 'artistic' = 'artistic',
   detectedMaterial?: { material: string, gemColor: string },
   scaleAnalysis?: ProductScaleResult | null // NEW: Smart Scale Analysis Result
-): Promise<{ image: string | null; error: string | null }> => {
+): Promise<{ image: string | null; error: string | null; debugInfo?: string }> => {
   const ai = createAI();
   const model = 'gemini-3-pro-image-preview';
 
@@ -926,25 +926,28 @@ export const generateLifestyleImage = async (
     }
   };
 
+  console.log("🚀 FINAL GEMINI REQUEST:", JSON.stringify(request.generationConfig, null, 2));
+
+  const debugMsg = `🚀 API RATIO: ${finalAspectRatio} (Snapped from ${technicalSettings.width}x${technicalSettings.height})`;
+
   const response = await ai.models.generateContent(request);
 
   const responseParts = response.candidates?.[0]?.content?.parts;
-  if (!responseParts) return { image: null, error: "Görsel oluşturulamadı (API Yanıtı Boş)" };
+  if (!responseParts) return { image: null, error: "Görsel oluşturulamadı (API Yanıtı Boş)", debugInfo: debugMsg };
 
   for (const part of responseParts) {
     if (part.inlineData) {
-      return { image: part.inlineData.data ?? null, error: null };
+      return { image: part.inlineData.data ?? null, error: null, debugInfo: debugMsg };
     }
   }
 
-  return { image: null, error: "Görsel verisi bulunamadı" };
-  return { image: null, error: "Görsel verisi bulunamadı" };
+  return { image: null, error: "Görsel verisi bulunamadı", debugInfo: debugMsg };
 };
 
 export const generateBatchLifestyleImages = async (
   count: number,
   ...args: Parameters<typeof generateLifestyleImage>
-): Promise<{ image: string | null; error: string | null }[]> => {
+): Promise<{ image: string | null; error: string | null; debugInfo?: string }[]> => {
   console.log(`🚀 Starting Batch Generation: ${count} parallel requests...`);
 
   // Create an array of promises
