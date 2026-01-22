@@ -391,6 +391,26 @@ const getStylingInstruction = (gemColor?: string): string => {
   return "STYLING: Elegant, high-fashion grooming. Manicured nails (Nude/Neutral).";
 };
 
+// --- HELPER: Aspect Ratio Snapping ---
+const getClosestAspectRatio = (width: number, height: number): string => {
+  const targetRatio = width / height;
+  const supportedRatios = [
+    { label: '1:1', value: 1.0 },
+    { label: '4:3', value: 4 / 3 },
+    { label: '3:4', value: 3 / 4 },
+    { label: '16:9', value: 16 / 9 },
+    { label: '9:16', value: 9 / 16 },
+  ];
+
+  // Find closest
+  const closest = supportedRatios.reduce((prev, curr) => {
+    return (Math.abs(curr.value - targetRatio) < Math.abs(prev.value - targetRatio) ? curr : prev);
+  });
+
+  console.log(`📏 Custom Size: ${width}x${height} (Ratio: ${targetRatio.toFixed(2)}) -> Snapped to: ${closest.label}`);
+  return closest.label;
+};
+
 export const generateLifestyleImage = async (
   productImagesBase64: string[],
   baseScenePrompt: string,
@@ -415,7 +435,14 @@ export const generateLifestyleImage = async (
   const ai = createAI();
   const model = 'gemini-3-pro-image-preview';
 
+  // Calculate Aspect Ratio
+  let finalAspectRatio = technicalSettings.aspectRatio;
+  if (technicalSettings.width && technicalSettings.height) {
+    finalAspectRatio = getClosestAspectRatio(technicalSettings.width, technicalSettings.height);
+  }
+
   console.log("📸 Shoot Mode:", shootMode || 'lifestyle (default)');
+  console.log("📐 Aspect Ratio:", finalAspectRatio);
 
   // ========================================
   // IDENTITY LOCK (PRESERVED IN BOTH MODES)
@@ -894,9 +921,7 @@ export const generateLifestyleImage = async (
     contents: [{ role: 'user', parts }],
     generationConfig: {
       imageConfig: {
-        aspectRatio: technicalSettings.width && technicalSettings.height
-          ? `${technicalSettings.width}:${technicalSettings.height}`
-          : technicalSettings.aspectRatio,
+        aspectRatio: finalAspectRatio,
         imageSize: '2K'
       }
     }
