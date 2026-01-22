@@ -24,7 +24,8 @@ import {
   Square2StackIcon,
   FilmIcon,
   VideoCameraIcon,
-  ChevronDownIcon
+  ChevronDownIcon,
+  CommandLineIcon
 } from '@heroicons/react/24/outline';
 import { generateLifestyleImage, generateBatchLifestyleImages, analyzeJewelry, generateJewelryVideo, analyzeProductVisuals, ProductScaleResult, AnalysisResult, JewelryProduct, ModelPersona, JOB_STATUS_MESSAGES, JobStatusKey, ANALYSIS_FALLBACK } from './lib/gemini';
 import { createClient } from '@supabase/supabase-js';
@@ -1237,6 +1238,31 @@ export default function App() {
                     <span className="hidden sm:inline">Reels Videosu</span>
                   </button>
                 )}
+              </div>
+
+              {/* DEBUG LOG PANEL */}
+              <div className="mt-4 bg-slate-900 rounded-xl p-4 font-mono text-xs text-green-400 border border-slate-700 shadow-inner max-h-48 overflow-y-auto">
+                <div className="flex justify-between items-center mb-2 border-b border-slate-700 pb-2">
+                  <span className="font-bold text-white flex items-center gap-2">
+                    <CommandLineIcon className="h-4 w-4" />
+                    Sistem Logları (Debug)
+                  </span>
+                  <button onClick={() => setJob(p => ({ ...p, debugLog: [] }))} className="text-slate-500 hover:text-white">Temizle</button>
+                </div>
+                <div className="space-y-1">
+                  {job.debugLog.length === 0 ? (
+                    <span className="text-slate-600 italic">Hazır. Bekleniyor...</span>
+                  ) : (
+                    job.debugLog.map((log, i) => (
+                      <div key={i} className="break-all border-l-2 border-slate-700 pl-2">
+                        <span className="text-slate-500 mr-2">[{new Date().toLocaleTimeString()}]</span>
+                        {log}
+                      </div>
+                    ))
+                  )}
+                  {/* Dummy div to auto-scroll to bottom if needed */}
+                  <div />
+                </div>
               </div>
             </div>
 
