@@ -392,7 +392,7 @@ const getStylingInstruction = (gemColor?: string): string => {
 };
 
 // --- HELPER: Aspect Ratio Snapping ---
-const getClosestAspectRatio = (width: number, height: number): string => {
+export const getClosestAspectRatio = (width: number, height: number): string => {
   const targetRatio = width / height;
   const supportedRatios = [
     { label: '1:1', value: 1.0 },
@@ -400,6 +400,11 @@ const getClosestAspectRatio = (width: number, height: number): string => {
     { label: '3:4', value: 3 / 4 },
     { label: '16:9', value: 16 / 9 },
     { label: '9:16', value: 9 / 16 },
+    { label: '4:5', value: 4 / 5 },
+    { label: '5:4', value: 5 / 4 },
+    { label: '3:2', value: 3 / 2 },
+    { label: '2:3', value: 2 / 3 },
+    { label: '21:9', value: 21 / 9 },
   ];
 
   // Find closest
