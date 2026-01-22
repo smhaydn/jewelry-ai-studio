@@ -346,6 +346,15 @@ export default function App() {
       const selectedModel = models.find(m => m.id === job.selectedModelId);
       if (!selectedModel) throw new Error("Manken seçilmedi.");
 
+
+      if (job.useManualSize) {
+        const r = job.customWidth / job.customHeight;
+        setJob(p => ({
+          ...p,
+          debugLog: [...p.debugLog, `📏 Manuel Boyut: ${job.customWidth}x${job.customHeight} (Oran: ${r.toFixed(2)})`]
+        }));
+      }
+
       // 1. ANALYZE PRODUCT SCALE (New Smart Layer)
       setJob(p => ({ ...p, debugLog: [...p.debugLog, "Ürün boyutları analiz ediliyor..."] }));
 

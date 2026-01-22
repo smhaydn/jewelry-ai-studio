@@ -921,8 +921,7 @@ export const generateLifestyleImage = async (
     contents: [{ role: 'user', parts }],
     generationConfig: {
       imageConfig: {
-        aspectRatio: finalAspectRatio,
-        imageSize: '2K'
+        aspectRatio: finalAspectRatio
       }
     }
   };
