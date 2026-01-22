@@ -961,14 +961,14 @@ export const generateLifestyleImage = async (
          - SOLUTION: EXECUTE "EXTREME CINEMATIC MACRO".
          
          INSTRUCTIONS:
-         1. IGNORE previous "Medium Shot" or "Full Body" commands.
-         2. ZOOM IN 300%. The ${category} must be the GIANT HERO of the image.
-         3. COMPOSITION:
-            - If Ring: Show ONLY fingers and part of hand. Fills the screen.
-            - If Earring: Show ONLY ear, jaw, and neck. Cut off top of head.
-            - If Necklace: Show ONLY neck and décolletage. Cut off eyes/forehead.
-         4. FILL THE FRAME: Do not leave empty dead space. Fill width with skin texture, fabric, or luxury bokeh.
-         5. The jewelry must be CRYSTAL CLEAR and huge enough to see gem details.
+         1. PRIORITIZE PRODUCT VISIBILITY ABOVE ALL ELSE.
+         2. CAMERA: Use 100mm Macro Lens. Distance: 30cm.
+         3. COMPOSITION RULES (STRICT):
+            - Ring: FILL THE SCREEN with the hand. The ring should be HUGE.
+            - Earring: Show ONLY the earlobe and jawline. CROPPING THE EYE IS ALLOWED.
+            - Necklace: FOCUS on the collarbone. CROPPING THE NOSE/EYES IS ALLOWED.
+         4. NO DEAD SPACE: The wide frame must be filled with skin texture or blurry luxury background.
+         5. SIZE REF: The jewelry must occupy at least 30% of the image pixel area.
          `;
     }
   }
