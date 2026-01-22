@@ -391,7 +391,7 @@ const getStylingInstruction = (gemColor?: string): string => {
   return "STYLING: Elegant, high-fashion grooming. Manicured nails (Nude/Neutral).";
 };
 
-// --- HELPER: Aspect Ratio Snapping ---
+// --- HELPER: Aspect Ratio Snapping (RESTRICTED TO VALID API VALUES) ---
 export const getClosestAspectRatio = (width: number, height: number): string => {
   const targetRatio = width / height;
   const supportedRatios = [
@@ -400,11 +400,6 @@ export const getClosestAspectRatio = (width: number, height: number): string => 
     { label: '3:4', value: 3 / 4 },
     { label: '16:9', value: 16 / 9 },
     { label: '9:16', value: 9 / 16 },
-    { label: '4:5', value: 4 / 5 },
-    { label: '5:4', value: 5 / 4 },
-    { label: '3:2', value: 3 / 2 },
-    { label: '2:3', value: 2 / 3 },
-    { label: '21:9', value: 21 / 9 },
   ];
 
   // Find closest
@@ -414,6 +409,53 @@ export const getClosestAspectRatio = (width: number, height: number): string => 
 
   console.log(`📏 Custom Size: ${width}x${height} (Ratio: ${targetRatio.toFixed(2)}) -> Snapped to: ${closest.label}`);
   return closest.label;
+};
+
+// --- HELPER: Client-Side Exact Cropping ---
+const resizeToExact = async (base64: string, width: number, height: number): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { resolve(base64); return; }
+
+      // "Cover" fit calculation
+      const targetRatio = width / height;
+      const srcRatio = img.width / img.height;
+
+      let sWidth = img.width;
+      let sHeight = img.height;
+      let sx = 0;
+      let sy = 0;
+
+      if (srcRatio > targetRatio) {
+        // Source is wider -> Cut sides
+        sWidth = img.height * targetRatio;
+        sx = (img.width - sWidth) / 2;
+      } else {
+        // Source is taller -> Cut top/bottom
+        sHeight = img.width / targetRatio;
+        sy = (img.height - sHeight) / 2;
+      }
+
+      // High quality resize
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+
+      ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, width, height);
+
+      // Return as base64 (remove prefix for consistency if needed, but here we return full data url usually? 
+      // The app expects base64 without prefix often, checking usage...)
+      // Usage in app seems to handle both. Let's return raw base64 to match `part.inlineData.data`.
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      resolve(dataUrl.split(',')[1]); // Remove "data:image/jpeg;base64," prefix
+    };
+    img.onerror = () => resolve(base64); // Fallback on error
+    img.src = `data:image/jpeg;base64,${base64}`;
+  });
 };
 
 export const generateLifestyleImage = async (
@@ -442,12 +484,15 @@ export const generateLifestyleImage = async (
 
   // Calculate Aspect Ratio
   let finalAspectRatio = technicalSettings.aspectRatio;
-  if (technicalSettings.width && technicalSettings.height) {
-    finalAspectRatio = getClosestAspectRatio(technicalSettings.width, technicalSettings.height);
+  const useCustomSize = !!(technicalSettings.width && technicalSettings.height);
+
+  if (useCustomSize) {
+    finalAspectRatio = getClosestAspectRatio(technicalSettings.width!, technicalSettings.height!);
   }
 
   console.log("📸 Shoot Mode:", shootMode || 'lifestyle (default)');
   console.log("📐 Aspect Ratio:", finalAspectRatio);
+
 
   // ========================================
   // IDENTITY LOCK (PRESERVED IN BOTH MODES)
@@ -933,7 +978,9 @@ export const generateLifestyleImage = async (
 
   console.log("🚀 FINAL GEMINI REQUEST:", JSON.stringify(request.generationConfig, null, 2));
 
-  const debugMsg = `🚀 API RATIO: ${finalAspectRatio} (Snapped from ${technicalSettings.width}x${technicalSettings.height})`;
+  const debugMsg = useCustomSize
+    ? `🚀 API: ${finalAspectRatio} -> ✂️ CROPPED: ${technicalSettings.width}x${technicalSettings.height}`
+    : `🚀 API RATIO: ${finalAspectRatio}`;
 
   const response = await ai.models.generateContent(request);
 
@@ -941,8 +988,19 @@ export const generateLifestyleImage = async (
   if (!responseParts) return { image: null, error: "Görsel oluşturulamadı (API Yanıtı Boş)", debugInfo: debugMsg };
 
   for (const part of responseParts) {
-    if (part.inlineData) {
-      return { image: part.inlineData.data ?? null, error: null, debugInfo: debugMsg };
+    if (part.inlineData && part.inlineData.data) {
+      let finalImage = part.inlineData.data;
+
+      // APPLY EXACT CROP IF MANUAL SIZE
+      if (useCustomSize && technicalSettings.width && technicalSettings.height) {
+        try {
+          finalImage = await resizeToExact(finalImage, technicalSettings.width, technicalSettings.height);
+        } catch (e) {
+          console.error("Resize failed:", e);
+        }
+      }
+
+      return { image: finalImage, error: null, debugInfo: debugMsg };
     }
   }
 
