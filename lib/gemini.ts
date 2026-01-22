@@ -401,6 +401,8 @@ export const generateLifestyleImage = async (
     cameraAngle: string;
     shotScale: string;
     lens: string;
+    width?: number;
+    height?: number;
   },
   modelReferenceBase64?: string | null,
   modelPhysicalDescription?: string,
@@ -892,7 +894,9 @@ export const generateLifestyleImage = async (
     contents: [{ role: 'user', parts }],
     generationConfig: {
       imageConfig: {
-        aspectRatio: technicalSettings.aspectRatio,
+        aspectRatio: technicalSettings.width && technicalSettings.height
+          ? `${technicalSettings.width}:${technicalSettings.height}`
+          : technicalSettings.aspectRatio,
         imageSize: '2K'
       }
     }

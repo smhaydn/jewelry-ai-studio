@@ -106,6 +106,10 @@ interface JobState {
   isVideoGenerating: boolean;
   selectedImageId: string | null; // ID of the currently selected main image
   generationTime: number; // Current job generation time
+  customWidth: number;
+  customHeight: number;
+  useManualSize: boolean;
+  batchCount?: number;
 }
 
 interface AppState {
@@ -194,7 +198,11 @@ export default function App() {
     generatedVideo: null,
     isVideoGenerating: false,
     selectedImageId: null,
-    generationTime: 0
+    generationTime: 0,
+    customWidth: 1024,
+    customHeight: 1024,
+    useManualSize: false,
+    batchCount: 1
   });
 
   // Zoom feature state
@@ -370,6 +378,8 @@ export default function App() {
           cameraAngle: 'Eye Level',
           shotScale: 'Medium Shot',
           lens: '50mm',
+          width: job.useManualSize ? job.customWidth : undefined,
+          height: job.useManualSize ? job.customHeight : undefined,
         },
         selectedModel.image,
         selectedModel.physicalDescription,
@@ -967,8 +977,47 @@ export default function App() {
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Boyut</span>
                   <div className="flex bg-slate-100 p-1 rounded-lg">
                     {ASPECT_RATIOS.map(ar => (
-                      <button key={ar.value} onClick={() => setJob(p => ({ ...p, aspectRatio: ar.value }))} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${job.aspectRatio === ar.value ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>{ar.label}</button>
+                      <button
+                        key={ar.value}
+                        onClick={() => {
+                          let w = 1024, h = 1024;
+                          if (ar.value === '4:5') { w = 1024; h = 1280; }
+                          else if (ar.value === '16:9') { w = 1792; h = 1024; }
+                          else if (ar.value === '9:16') { w = 1024; h = 1792; }
+                          setJob(p => ({ ...p, aspectRatio: ar.value, customWidth: w, customHeight: h, useManualSize: false }));
+                        }}
+                        className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${!job.useManualSize && job.aspectRatio === ar.value ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                      >
+                        {ar.label}
+                      </button>
                     ))}
+                  </div>
+                </div>
+
+                {/* Manual Dimensions Input */}
+                <div className="flex items-center gap-3 mt-2 pt-2 border-t border-slate-100">
+                  <div className="flex-1 flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200 focus-within:border-brand-purple/50 focus-within:ring-2 focus-within:ring-brand-purple/10 transition-all">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase w-4">W</span>
+                    <input
+                      type="number"
+                      value={job.customWidth}
+                      onChange={(e) => setJob(p => ({ ...p, customWidth: parseInt(e.target.value) || 0, useManualSize: true }))}
+                      className="bg-transparent w-full text-xs font-bold text-slate-700 focus:outline-none"
+                      min="256"
+                      max="2048"
+                    />
+                  </div>
+                  <span className="text-slate-300 font-light">×</span>
+                  <div className="flex-1 flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200 focus-within:border-brand-purple/50 focus-within:ring-2 focus-within:ring-brand-purple/10 transition-all">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase w-4">H</span>
+                    <input
+                      type="number"
+                      value={job.customHeight}
+                      onChange={(e) => setJob(p => ({ ...p, customHeight: parseInt(e.target.value) || 0, useManualSize: true }))}
+                      className="bg-transparent w-full text-xs font-bold text-slate-700 focus:outline-none"
+                      min="256"
+                      max="2048"
+                    />
                   </div>
                 </div>
               </div>
