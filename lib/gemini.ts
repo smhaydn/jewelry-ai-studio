@@ -947,6 +947,32 @@ export const generateLifestyleImage = async (
     `;
   }
 
+  // ========================================
+  // SPECIAL OVERRIDE: CINEMATIC MACRO FOR LANDSCAPE (SALES FOCUS)
+  // ========================================
+  if (useCustomSize && technicalSettings.width && technicalSettings.height) {
+    const ratio = technicalSettings.width / technicalSettings.height;
+    if (ratio > 1.3) { // If Landscape (Wider than 4:3)
+      fullPrompt += `
+         \n
+         *** CRITICAL OVERRIDE: CINEMATIC MACRO LANDSCAPE MODE ***
+         - The user requested a WIDE BANNER format (${technicalSettings.width}x${technicalSettings.height}).
+         - PROBLEM: Standard shots make the jewelry too small in wide frames.
+         - SOLUTION: EXECUTE "EXTREME CINEMATIC MACRO".
+         
+         INSTRUCTIONS:
+         1. IGNORE previous "Medium Shot" or "Full Body" commands.
+         2. ZOOM IN 300%. The ${category} must be the GIANT HERO of the image.
+         3. COMPOSITION:
+            - If Ring: Show ONLY fingers and part of hand. Fills the screen.
+            - If Earring: Show ONLY ear, jaw, and neck. Cut off top of head.
+            - If Necklace: Show ONLY neck and décolletage. Cut off eyes/forehead.
+         4. FILL THE FRAME: Do not leave empty dead space. Fill width with skin texture, fabric, or luxury bokeh.
+         5. The jewelry must be CRYSTAL CLEAR and huge enough to see gem details.
+         `;
+    }
+  }
+
   const parts: any[] = [{ text: fullPrompt }];
 
   // INPUT IMAGES
