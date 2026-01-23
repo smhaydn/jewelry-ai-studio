@@ -922,14 +922,20 @@ export const generateLifestyleImage = async (
         - Shadows and highlights are natural and imperfect
           - Warm, flattering tones
 
-    SCENARIO:
+    *** PRODUCT (THE PROTAGONIST) ***
+    - This image is an ADVERTISEMENT for the ${category}.
+    - IF THE ${category} IS NOT VISIBLE, THE IMAGE IS FAILED.
+    - Scene/Vibe is secondary. Product visibility is PRIMARY.
+
+    SCENARIO INSTRUCTIONS:
     ${scenarioPrompt}
     
-    *** PRODUCT INTEGRATION (MANDATORY) ***
-    - The ${category} MUST be clearly visible during this activity.
-    - If holding an object (cup, phone, book), the hand wearing the ${category} must be the one holding it (or visible next to it).
-    - Do NOT let the product be hidden by hair, shadow, or props.
-    - The camera focus must be on the ${category}, even if the face is in the background.
+    *** FORCED INTEGRATION (MUST FOLLOW) ***
+    - ACTION LINK: If the scenario involves an action (holding glass, typing, fixing hair), the ${category} MUST be on the active hand/body part.
+    - EXAMPLE: If holding a glass, the ${category} MUST be on the finger/wrist holding the glass.
+    - LIGHTING LINK: A beam of light must specifically hit the ${category} to highlight it.
+    - NO HIDING: Do not hold objects in a way that obscures the ${category}.
+    - FOCUS: The camera focus is locked on the ${category}. The background (and even the face) captures the vibe, but the PRODUCT is sharp.
 
     ENVIRONMENT:
     - ${baseScenePrompt}
