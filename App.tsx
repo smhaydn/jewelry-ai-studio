@@ -137,9 +137,14 @@ const LIFESTYLE_PRESETS = [
   { id: 'lazy_sunday', label: 'Lazy Sunday', prompt: 'relaxed home setting, cozy couch or bed, natural morning light, casual lifestyle', group: 'Home' },
   { id: 'getting_ready', label: 'Getting Ready', prompt: 'bathroom or dressing room, mirror selfie aesthetic, getting ready vibe, soft lighting', group: 'Home' },
   { id: 'kitchen_mess', label: 'Kitchen Mess', prompt: 'kitchen counter, casual home setting, coffee cup, morning routine, authentic lifestyle', group: 'Home' },
+  { id: 'office_day', label: 'Office / Business', prompt: 'modern office setting, working on laptop, power dressing, city view, professional vibe', group: 'Work' },
   { id: 'car_interior', label: 'Car Interior', prompt: 'inside luxury car, leather seats, steering wheel detail, travel lifestyle', group: 'Travel' },
   { id: 'street_style', label: 'Street Style', prompt: 'urban outdoor, city background, walking shot, street fashion, natural daylight', group: 'Outdoor' },
   { id: 'cafe_date', label: 'Cafe Date', prompt: 'sitting at cafe, coffee cup, blurred street background, casual luxury', group: 'Social' },
+  { id: 'date_night', label: 'Date Night', prompt: 'romantic restaurant dinner, candlelit, evening wear, wine glass, moody lighting', group: 'Social' },
+  { id: 'party_event', label: 'Party / Event', prompt: 'social gathering, champagne glass, laughing, flash photography, night out', group: 'Social' },
+  { id: 'gym_fitness', label: 'Gym / Fitness', prompt: 'yoga studio or gym, activewear, water bottle, post-workout glow, healthy lifestyle', group: 'Wellness' },
+  { id: 'nature_picnic', label: 'Nature / Picnic', prompt: 'green park, sunlight filtered through trees, picnic setting, book and flowers, organic vibe', group: 'Outdoor' },
   { id: 'poolside', label: 'Poolside', prompt: 'lounging by pool, water reflections, summer vibes, vacation lifestyle', group: 'Travel' },
 ];
 
