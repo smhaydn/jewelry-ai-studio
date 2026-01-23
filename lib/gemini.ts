@@ -864,6 +864,32 @@ export const generateLifestyleImage = async (
       scenarioPrompt = "Candid lifestyle moment, natural and authentic.";
     }
 
+    // ========================================
+    // CRITICAL: SCALE & FOCUS ENFORCEMENT (WORN REF)
+    // ========================================
+    let scaleReferencePrompt = "";
+    if (wornReferenceBase64s && wornReferenceBase64s.length > 0) {
+      scaleReferencePrompt = `
+      *** SCALE ANCHOR: WORN REFERENCE PROVIDED ***
+        1. ANALYZE the attached 'Worn Reference' images.
+      2. MIMIC THE EXACT SIZE of the ${category} relative to the body part(finger / neck / ear).
+      3. IF the reference shows a Statement / Big Ring, MAKE IT BIG.
+      4. IF the reference shows a Tiny Ring, MAKE IT TINY.
+      
+      *** FOCUS ENFORCEMENT(NEW) ***
+      - PROBLEM: The reference might be a wide shot.
+      - SOLUTION: DO NOT COPY THE COMPOSITION OF THE REFERENCE.
+      - YOU MUST ZOOM IN MORE THAN THE REFERENCE.
+      - The product must be the HERO.
+      - CROP IN TIGHT.If the reference shows the whole hand, YOU show only 3 fingers.
+      - The jewelry details must be SHARPER than the reference.
+
+      VERIFICATION:
+    - Can you see the texture of the metal ? If no, ZOOM IN.
+      - Does the product look like the same size as the reference ? If no, FIX SIZE.
+      `;
+    }
+
     fullPrompt = `
     ${scaleReferencePrompt}
     ${scaleEnforcementPrompt}
@@ -871,80 +897,80 @@ export const generateLifestyleImage = async (
     ${modelIdentityPrompt}
 
     *** LIFESTYLE MODE: CANDID INFLUENCER AESTHETIC ***
-    
+
     SUBJECT: Authentic lifestyle moment featuring a ${category}.
     
     CAMERA SETTINGS:
-    - Shot on iPhone 15 Pro Max (Portrait Mode, Flash ON) OR 35mm Film Camera (Kodak Portra 400)
-    - Aperture: f/1.8 or f/2.0 (Shallow depth of field, blurry background)
-    - Natural grain and slight imperfections welcome
-    - Paparazzi-style direct flash acceptable
-    
+    - Shot on iPhone 15 Pro Max(Portrait Mode, Flash ON) OR 35mm Film Camera(Kodak Portra 400)
+      - Aperture: f / 1.8 or f / 2.0(Shallow depth of field, blurry background)
+        - Natural grain and slight imperfections welcome
+          - Paparazzi - style direct flash acceptable
+
     LIGHTING:
     - Natural window light, Golden Hour, OR Direct Camera Flash
-    - Uncontrolled, authentic lighting
-    - Shadows and highlights are natural and imperfect
-    - Warm, flattering tones
-    
+      - Uncontrolled, authentic lighting
+        - Shadows and highlights are natural and imperfect
+          - Warm, flattering tones
+
     SCENARIO:
     ${scenarioPrompt}
-    
+
     ENVIRONMENT:
     - ${baseScenePrompt}
-    - Messy, lived-in, authentic
-    - Props and context elements encouraged
-    - Blurred background (bokeh)
+    - Messy, lived -in, authentic
+      - Props and context elements encouraged
+        - Blurred background(bokeh)
     
-    MODEL DIRECTION (CRITICAL):
+    MODEL DIRECTION(CRITICAL):
     - The model is NOT posing perfectly
-    - She is caught in a candid moment
-    - Hair should be slightly messy/natural (NOT perfectly styled)
-    - Expression: Natural, authentic, maybe laughing or looking away
-    - Body language: Relaxed, not stiff
-    - This is NOT a professional photoshoot - it's a real moment
-    
+      - She is caught in a candid moment
+        - Hair should be slightly messy / natural(NOT perfectly styled)
+          - Expression: Natural, authentic, maybe laughing or looking away
+            - Body language: Relaxed, not stiff
+              - This is NOT a professional photoshoot - it's a real moment
+
     SKIN & TEXTURE:
-    - Visible skin texture (pores, slight imperfections)
-    - NO plastic smoothness
-    - NO heavy retouching
-    - Real human skin with natural texture
-    - Freckles, moles, texture marks MUST be visible if present
+    - Visible skin texture(pores, slight imperfections)
+      - NO plastic smoothness
+        - NO heavy retouching
+          - Real human skin with natural texture
+            - Freckles, moles, texture marks MUST be visible if present
     
     STYLING:
-    - Casual, effortless
-    - "Old Money" or "Influencer" aesthetic
-    - Minimal makeup or natural makeup
-    - Nails: Can be natural or trendy (not necessarily perfect)
-    - Clothing: Casual luxury (silk robe, oversized sweater, etc.)
-    
+      - Casual, effortless
+        - "Old Money" or "Influencer" aesthetic
+          - Minimal makeup or natural makeup
+            - Nails: Can be natural or trendy(not necessarily perfect)
+              - Clothing: Casual luxury(silk robe, oversized sweater, etc.)
+
     VIBE:
     - Candid, Authentic, Imperfect
-    - "Caught in the moment"
-    - Influencer aesthetic (Sofia Richie, Hailey Bieber style)
-    - Messy but chic
-    - NOT staged, NOT perfect
-    
+      - "Caught in the moment"
+      - Influencer aesthetic(Sofia Richie, Hailey Bieber style)
+        - Messy but chic
+          - NOT staged, NOT perfect
+
     COMPOSITION:
     - Product is visible but NOT the only focus
-    - Context and lifestyle matter
-    - Asymmetrical, natural framing
-    - Bokeh background
+      - Context and lifestyle matter
+        - Asymmetrical, natural framing
+          - Bokeh background
     
-    NEGATIVE PROMPT (STRICTLY FORBIDDEN):
+    NEGATIVE PROMPT(STRICTLY FORBIDDEN):
     - NO perfect studio lighting
-    - NO stiff, professional posing
-    - NO perfectly styled hair
-    - NO sterile backgrounds
-    - NO catalog-style perfection
+      - NO stiff, professional posing
+        - NO perfectly styled hair
+          - NO sterile backgrounds
+            - NO catalog - style perfection
     
     PRODUCT FIDELITY:
-    - The product images are SACRED. Do not alter the design.
+    - The product images are SACRED.Do not alter the design.
     - Maintain exact proportions and scale
-    - ${category} should look delicate and fine, not oversized
-    - Metal thickness and stone size must match reference exactly
-    
-    *** END LIFESTYLE MODE ***
-    `;
+      - ${category} should look delicate and fine, not oversized
+        - Metal thickness and stone size must match reference exactly
+
+          *** END LIFESTYLE MODE ***
+            `;
   }
 
   // ========================================
@@ -954,21 +980,21 @@ export const generateLifestyleImage = async (
     const ratio = technicalSettings.width / technicalSettings.height;
     if (ratio > 1.3) { // If Landscape (Wider than 4:3)
       fullPrompt += `
-         \n
-         *** CRITICAL OVERRIDE: CINEMATIC MACRO LANDSCAPE MODE ***
-         - The user requested a WIDE BANNER format (${technicalSettings.width}x${technicalSettings.height}).
+\n
+  *** CRITICAL OVERRIDE: CINEMATIC MACRO LANDSCAPE MODE ***
+    - The user requested a WIDE BANNER format(${technicalSettings.width}x${technicalSettings.height}).
          - PROBLEM: Standard shots make the jewelry too small in wide frames.
          - SOLUTION: EXECUTE "EXTREME CINEMATIC MACRO".
-         
-         INSTRUCTIONS:
-         1. PRIORITIZE PRODUCT VISIBILITY ABOVE ALL ELSE.
-         2. CAMERA: Use 100mm Macro Lens. Distance: 30cm.
-         3. COMPOSITION RULES (STRICT):
-            - Ring: FILL THE SCREEN with the hand. The ring should be HUGE.
-            - Earring: Show ONLY the earlobe and jawline. CROPPING THE EYE IS ALLOWED.
-            - Necklace: FOCUS on the collarbone. CROPPING THE NOSE/EYES IS ALLOWED.
+
+  INSTRUCTIONS:
+1. PRIORITIZE PRODUCT VISIBILITY ABOVE ALL ELSE.
+         2. CAMERA: Use 100mm Macro Lens.Distance: 30cm.
+         3. COMPOSITION RULES(STRICT):
+- Ring: FILL THE SCREEN with the hand.The ring should be HUGE.
+            - Earring: Show ONLY the earlobe and jawline.CROPPING THE EYE IS ALLOWED.
+            - Necklace: FOCUS on the collarbone.CROPPING THE NOSE / EYES IS ALLOWED.
          4. NO DEAD SPACE: The wide frame must be filled with skin texture or blurry luxury background.
-         5. SIZE REF: The jewelry must occupy at least 30% of the image pixel area.
+         5. SIZE REF: The jewelry must occupy at least 30 % of the image pixel area.
          `;
     }
   }
@@ -1005,8 +1031,8 @@ export const generateLifestyleImage = async (
   console.log("🚀 FINAL GEMINI REQUEST:", JSON.stringify(request.generationConfig, null, 2));
 
   const debugMsg = useCustomSize
-    ? `🚀 API: ${finalAspectRatio} -> ✂️ CROPPED: ${technicalSettings.width}x${technicalSettings.height}`
-    : `🚀 API RATIO: ${finalAspectRatio}`;
+    ? `🚀 API: ${finalAspectRatio} -> ✂️ CROPPED: ${technicalSettings.width}x${technicalSettings.height} `
+    : `🚀 API RATIO: ${finalAspectRatio} `;
 
   const response = await ai.models.generateContent(request);
 
