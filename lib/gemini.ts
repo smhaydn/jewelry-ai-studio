@@ -924,6 +924,12 @@ export const generateLifestyleImage = async (
 
     SCENARIO:
     ${scenarioPrompt}
+    
+    *** PRODUCT INTEGRATION (MANDATORY) ***
+    - The ${category} MUST be clearly visible during this activity.
+    - If holding an object (cup, phone, book), the hand wearing the ${category} must be the one holding it (or visible next to it).
+    - Do NOT let the product be hidden by hair, shadow, or props.
+    - The camera focus must be on the ${category}, even if the face is in the background.
 
     ENVIRONMENT:
     - ${baseScenePrompt}
