@@ -847,21 +847,31 @@ export const generateLifestyleImage = async (
     const presetLower = stylePreset.toLowerCase();
 
     if (presetLower.includes('lazy') || presetLower.includes('sunday') || presetLower.includes('bed')) {
-      scenarioPrompt = "Lying in bed with messy sheets, hair in a loose bun, holding a coffee mug, scrolling on phone. Casual, just-woke-up energy.";
-    } else if (presetLower.includes('kitchen') || presetLower.includes('mess')) {
-      scenarioPrompt = "In a messy kitchen, flour on counter, eating a croissant, laughing. Authentic home moment.";
-    } else if (presetLower.includes('car') || presetLower.includes('interior')) {
-      scenarioPrompt = "Selfie angle inside a luxury car, sunlight streaming through window, hand on steering wheel. Travel vibe.";
+      scenarioPrompt = "Lying in bed with messy sheets, hair in a loose bun, holding a coffee mug, scrolling on phone. Casual, just-woke-up energy. Soft morning light.";
+    } else if (presetLower.includes('kitchen') || presetLower.includes('mess') || presetLower.includes('cooking')) {
+      scenarioPrompt = "In a messy gourmet kitchen, flour on counter, eating a croissant, laughing. Authentic home moment. Warm, inviting atmosphere.";
+    } else if (presetLower.includes('car') || presetLower.includes('interior') || presetLower.includes('driving')) {
+      scenarioPrompt = "Selfie angle inside a luxury car (cream leather interior), sunlight streaming through window, hand on steering wheel. Travel/Success vibe.";
     } else if (presetLower.includes('mirror') || presetLower.includes('selfie') || presetLower.includes('getting ready')) {
-      scenarioPrompt = "Taking a photo in a mirror, phone visible in hand, flash firing. Getting-ready aesthetic.";
-    } else if (presetLower.includes('street') || presetLower.includes('urban')) {
-      scenarioPrompt = "Walking on city street, caught mid-stride, looking back at camera. Street style energy.";
-    } else if (presetLower.includes('cafe') || presetLower.includes('coffee')) {
-      scenarioPrompt = "Sitting at cafe table, holding coffee cup, blurred street background. Casual luxury.";
-    } else if (presetLower.includes('pool') || presetLower.includes('vacation')) {
-      scenarioPrompt = "Lounging by pool, wet hair, sunglasses, summer vacation vibe.";
+      scenarioPrompt = "Taking a photo in a vintage mirror, phone visible in hand, flash firing. Messy vanity table with makeup. Getting-ready for a night out.";
+    } else if (presetLower.includes('street') || presetLower.includes('urban') || presetLower.includes('city')) {
+      scenarioPrompt = "Walking on busy city street (Paris/NYC vibe), caught mid-stride, looking back at camera. Street style energy, blurred taxis in background.";
+    } else if (presetLower.includes('cafe') || presetLower.includes('coffee') || presetLower.includes('brunch')) {
+      scenarioPrompt = "Sitting at a chic sidewalk cafe table, holding an iced latte, blurred street background. Casual luxury, sunglasses on table.";
+    } else if (presetLower.includes('pool') || presetLower.includes('vacation') || presetLower.includes('beach')) {
+      scenarioPrompt = "Lounging by a resort pool, wet hair, sunglasses, cocktail in hand. Summer vacation vibe, blue water background.";
+    } else if (presetLower.includes('office') || presetLower.includes('work') || presetLower.includes('business')) {
+      scenarioPrompt = "Working at a modern glass office, typing on a MacBook, holding a sleek pen. Power woman aesthetic, city skyline view.";
+    } else if (presetLower.includes('date') || presetLower.includes('night') || presetLower.includes('dinner')) {
+      scenarioPrompt = "Candlelit dinner at a high-end restaurant, holding a wine glass. Romantic, moody lighting (Dim but product is lit). Evening wear.";
+    } else if (presetLower.includes('gym') || presetLower.includes('fitness') || presetLower.includes('yoga')) {
+      scenarioPrompt = "Post-workout glow, holding a water bottle, wearing aesthetic activewear. Yoga studio background with soft natural light.";
+    } else if (presetLower.includes('party') || presetLower.includes('event') || presetLower.includes('club')) {
+      scenarioPrompt = "At a social event/gallery opening, holding a champagne flute, laughing with friends (blurred). Flash photography, high contrast.";
+    } else if (presetLower.includes('nature') || presetLower.includes('picnic') || presetLower.includes('park')) {
+      scenarioPrompt = "Picnic in a sun-drenched park, reading a book, hand resting on grass. Soft organic textures, flowers.";
     } else {
-      scenarioPrompt = "Candid lifestyle moment, natural and authentic.";
+      scenarioPrompt = "Candid lifestyle moment, natural and authentic. Caught in motion, not posing.";
     }
 
     // ========================================
