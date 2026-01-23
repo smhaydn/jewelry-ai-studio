@@ -1002,22 +1002,21 @@ export const generateLifestyleImage = async (
     const ratio = technicalSettings.width / technicalSettings.height;
     if (ratio > 1.3) { // If Landscape (Wider than 4:3)
       fullPrompt += `
-\n
-  *** CRITICAL OVERRIDE: CINEMATIC MACRO LANDSCAPE MODE ***
-    - The user requested a WIDE BANNER format(${technicalSettings.width}x${technicalSettings.height}).
-         - PROBLEM: Standard shots make the jewelry too small in wide frames.
-         - SOLUTION: EXECUTE "EXTREME CINEMATIC MACRO".
-
-  INSTRUCTIONS:
-1. PRIORITIZE PRODUCT VISIBILITY ABOVE ALL ELSE.
-         2. CAMERA: Use 100mm Macro Lens.Distance: 30cm.
-         3. COMPOSITION RULES(STRICT):
-- Ring: FILL THE SCREEN with the hand.The ring should be HUGE.
-            - Earring: Show ONLY the earlobe and jawline.CROPPING THE EYE IS ALLOWED.
-            - Necklace: FOCUS on the collarbone.CROPPING THE NOSE / EYES IS ALLOWED.
-         4. NO DEAD SPACE: The wide frame must be filled with skin texture or blurry luxury background.
-         5. SIZE REF: The jewelry must occupy at least 30 % of the image pixel area.
-         `;
+       \n
+       *** CRITICAL OVERRIDE: WIDE EDITORIAL LANDSCAPE MODE ***
+       - The user requested a WIDE BANNER format (${technicalSettings.width}x${technicalSettings.height}).
+       - OBJECTIVE: A balanced "Rule of Thirds" composition suitable for a website hero section.
+       
+       INSTRUCTIONS:
+       1. DO NOT ZOOM IN EXTREMELY. We need context.
+       2. USE THE WIDTH: Place the Model's Face on one side (Left/Right) and the Jewelry on the other side.
+       3. THE RELATIONSHIP: Show the connection between the woman and the jewelry.
+          - If Ring: Show the hand near the face, but KEEP THE EYES VISIBLE.
+          - If Necklace: Show the full neck and shoulders, with the head FULLY VISIBLE.
+          - If Earrings: Show the profile of the woman, including her hair and eyes.
+       4. NO "HEADLESS" CROPS: Unless absolutely necessary for focus, keep the model's identity (eyes/lips) visible.
+       5. PRODUCT CLARITY: The product must be sharp and lit, but part of a larger, elegant scene.
+       `;
     }
   }
 
